@@ -7,3 +7,21 @@
 [submodule "3rdparty/glad"]
 	path = 3rdparty/glad
 	url = https://github.com/Dav1dde/glad.git
+[submodule "3rdparty/glm"]
+	path = 3rdparty/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "3rdparty/stb"]
+	path = 3rdparty/stb
+	url = https://github.com/nothings/stb.git
+[submodule "3rdparty/tinygltf"]
+	path = 3rdparty/tinygltf
+	url = https://github.com/syoyo/tinygltf.git
+[submodule "3rdparty/simdjson"]
+	path = 3rdparty/simdjson
+	url = https://github.com/simdjson/simdjson.git
+[submodule "3rdparty/glfw"]
+	path = 3rdparty/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "3rdparty/JoltPhysics"]
+	path = 3rdparty/JoltPhysics
+	url = https://github.com/jrouwe/JoltPhysics.git
