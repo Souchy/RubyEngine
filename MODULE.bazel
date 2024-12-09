@@ -1,0 +1,21 @@
+###############################################################################
+# Bazel now uses Bzlmod by default to manage external dependencies.
+# Please consider migrating your external dependencies from WORKSPACE to MODULE.bazel.
+#
+# For more details, please check https://github.com/bazelbuild/bazel/issues/18958
+###############################################################################
+module(name = "rubyengine")
+
+# git_repository(
+#     name = "my_library",
+#     remote = "https://github.com/SanderMertens/flecs.git",
+#     tag = "v1.0",
+#     visibility = ["//visibility:public"],
+# )
+# bazel_dep(name = "glm", version = "1.0.0.bcr.1")
+
+# http_archive(
+# 	name = "flecs",
+# 	urls = ["https://github.com/SanderMertens/flecs/archive/refs/tags/v4.0.3.tar.gz"],
+# 	build_file = ""
+# )

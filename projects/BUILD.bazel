@@ -1,0 +1,34 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "editor",
+
+    srcs = glob(["editor/src/**/*.cpp"]),
+    includes = ["editor/src/main/headers"],
+
+    deps = [
+        "//projects:engine",
+        # "//3rdparty:glm",
+        # "@my_library//:flecs"
+    ],
+)
+
+cc_library(
+    name = "engine",
+    
+    srcs = glob(["engine/src/**/*.cpp", "engine/src/**/*.h"]),
+    hdrs = glob(["engine/src/**/*.h"]),
+    includes = ["engine/src/main/public"],
+    
+    deps = ["@vcpkg//:libs"],
+
+    data = glob([
+        "engine/res/**/*.vert",
+        "engine/res/**/*.frag"
+        ]),
+
+    # additional_compiler_inputs = [
+    #     "std:c++17"
+    # ]
+)
+

@@ -1,0 +1,46 @@
+cc_library(
+    name = "libs",
+    visibility = ["//visibility:public"],
+	# include_prefix = "glm",
+    linkstatic = 1,
+    # deps = select({
+    #     ":prod": [":config_prod"],
+    #     ":debug": [":config_debug"],
+    #     "//conditions:default": [":generic_lib"],
+    # }),
+    srcs = select({
+        "@bazel_tools//src/conditions:windows": glob([
+            "x64-windows/lib/**/*.lib", 
+            "x64-windows/debug/**/*.dll"
+        ]),
+        # "@bazel_tools//src/conditions:darwin": glob(["x64-osx/lib/**/*.a"]),
+        # "//conditions:default": glob(["x64-linux/lib/**/*.a"]),
+    }),
+    hdrs = select({
+        "@bazel_tools//src/conditions:windows": glob([
+            "x64-windows/include/**/*.h"
+        ]),
+        # "@bazel_tools//src/conditions:darwin": glob(["x64-osx/include/glm/**/*.h"]),
+        # "//conditions:default": glob(["x64-linux/include/glm/**/*.h"]),
+    }),
+    includes = select({
+        "@bazel_tools//src/conditions:windows": [
+            "x64-windows/include",
+            "x64-windows/include/**/*.h"
+        ],
+        # "@bazel_tools//src/conditions:darwin": ["x64-osx/include/glm/"],
+        # "//conditions:default": ["x64-linux/include/glm/"],
+    }),
+)
+
+# config_setting(
+#     name = "config_prod",
+#     values = {
+#     },
+# )
+# config_setting(
+#     name = "config_debug",
+#     values = {
+#         "compilation_mode": "dbg"
+#     },
+# )

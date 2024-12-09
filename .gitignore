@@ -1,3 +1,31 @@
+
+###### VCPKG
+vcpkg_installed
+
+###### Bazel
+bazel-*
+
+###### VSCode
+.vscode/*
+
+###### Gradle
+.gradle
+**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrappper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
+###### C++
+
 # Prerequisites
 *.d
 
@@ -30,3 +58,9 @@
 *.exe
 *.out
 *.app
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build

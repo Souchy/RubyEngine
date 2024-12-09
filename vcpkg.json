@@ -1,0 +1,29 @@
+{
+  "dependencies": [
+    "assimp",
+    "cgltf",
+    "flecs",
+    "glad",
+    "glfw3",
+    "glm",
+    {
+      "name": "imgui",
+      "features": [
+        "glfw-binding",
+        "opengl3-binding",
+        "vulkan-binding",
+        "win32-binding",
+        "freetype-lunasvg",
+        "docking-experimental"
+      ]
+    },
+    "imgui-node-editor",
+    "imguizmo",
+    "implot",
+    "joltphysics",
+    "simdjson",
+    "stb",
+    "tbb",
+    "tinygltf"
+  ]
+}
