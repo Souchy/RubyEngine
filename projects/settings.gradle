@@ -9,4 +9,3 @@ rootProject.name = 'RubyEngine'
 include('engine')
 include('editor')
 include('prototype')
-include('../3rdparty/glad')
