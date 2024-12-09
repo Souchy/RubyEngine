@@ -25,3 +25,6 @@
 [submodule "3rdparty/JoltPhysics"]
 	path = 3rdparty/JoltPhysics
 	url = https://github.com/jrouwe/JoltPhysics.git
+[submodule "3rdparty/oneTBB"]
+	path = 3rdparty/oneTBB
+	url = https://github.com/uxlfoundation/oneTBB.git
