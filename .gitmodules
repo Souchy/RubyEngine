@@ -28,3 +28,12 @@
 [submodule "3rdparty/oneTBB"]
 	path = 3rdparty/oneTBB
 	url = https://github.com/uxlfoundation/oneTBB.git
+[submodule "3rdparty/flecs"]
+	path = 3rdparty/flecs
+	url = https://github.com/SanderMertens/flecs.git
+[submodule "3rdparty/cgltf"]
+	path = 3rdparty/cgltf
+	url = https://github.com/jkuhlmann/cgltf.git
+[submodule "3rdparty/assimp"]
+	path = 3rdparty/assimp
+	url = https://github.com/assimp/assimp.git
