@@ -15,7 +15,7 @@ public:
     // GLFW Window
     GLFWwindow *m_window = nullptr;
 
-    int initialize();
+    int initialize(const char *title);
     void InitializeCallback();
     // Callback to intersept GLFW calls
     void FramebufferSizeCallback(int width, int height);

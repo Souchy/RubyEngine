@@ -2,7 +2,7 @@
 
 #include <Window.h>
 
-int Window::initialize() {
+int Window::initialize(const char *title) {
     // OpenGL version (usefull for imGUI and other libraries)
     const char *glsl_version = "#version 460 core";
 
@@ -25,7 +25,7 @@ int Window::initialize() {
 
     // glfw window creation
     // --------------------
-    m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, "Labo 2", nullptr, nullptr);
+    m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, title, nullptr, nullptr);
     if (m_window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -48,7 +48,7 @@ int Window::initialize() {
     // this->ui = new Ui();
     // Setup Dear ImGui context
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
@@ -133,36 +133,34 @@ void Window::MouseButtonCallback(int button, int action, int mods) {
     // }
 }
 
-int Window::RenderLoop()
-{
-	float time = (float)glfwGetTime();
-	while (!glfwWindowShouldClose(m_window))
-	{
-		// Compute delta time between two frames
-		float new_time = (float)glfwGetTime();
-		const float delta_time = new_time - time;
-		time = new_time;
+int Window::RenderLoop() {
+    float time = (float)glfwGetTime();
+    while (!glfwWindowShouldClose(m_window)) {
+        // Compute delta time between two frames
+        float new_time = (float)glfwGetTime();
+        const float delta_time = new_time - time;
+        time = new_time;
 
-		// Check inputs: Does ESC was pressed?
-		if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(m_window, true);
-		// if (!m_imGuiActive)
-		// {
-		// 	m_camera.keybordEvents(m_window, delta_time);
-		// }
+        // Check inputs: Does ESC was pressed?
+        if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(m_window, true);
+        // if (!m_imGuiActive)
+        // {
+        // 	m_camera.keybordEvents(m_window, delta_time);
+        // }
 
-		// RenderScene(delta_time);
-		// RenderImgui();
+        // RenderScene(delta_time);
+        // RenderImgui();
 
-		// Show rendering and get events
-		glfwSwapBuffers(m_window);
-		// m_imGuiActive = ImGui::IsAnyItemActive();
-		glfwPollEvents();
-	}
+        // Show rendering and get events
+        glfwSwapBuffers(m_window);
+        // m_imGuiActive = ImGui::IsAnyItemActive();
+        glfwPollEvents();
+    }
 
-	// Cleanup
-	glfwDestroyWindow(m_window);
-	glfwTerminate();
+    // Cleanup
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
 
-	return 0;
+    return 0;
 }

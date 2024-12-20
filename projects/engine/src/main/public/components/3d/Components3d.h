@@ -19,3 +19,10 @@ struct WorldTransform3d {
 };
 
 
+struct CameraView3d {
+	glm::mat4 value;
+};
+
+struct CameraPerspective3d {
+	glm::mat4 value;
+};

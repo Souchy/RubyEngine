@@ -30,15 +30,13 @@ void Ruby::initDefaultPipeline() {
                                     // render cubes
                                     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
 
-                                    // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-                                    std::cout << "Draw: " << e.name() << std::endl;
-
-                                    mat.shader->setMat4((GLint) 10, worldTransform); // worldMatrix
+                                    mat.shader->setMat4(10, worldTransform); // worldMatrix
                                     // camera
-                                    mat.shader->setMat4((GLint) 11, glm::mat4(1.0f)); // viewMatrix
-                                    mat.shader->setMat4((GLint) 12, glm::mat4(1.0f)); // projectionMatrix
-                                    mat.shader->setVec3((GLint) 13, glm::vec3(1.0f)); // camPos
-                                    // it.world().get<Camera>();
+                                    auto view = it.world().get<CameraView3d>();
+                                    auto pers = it.world().get<CameraPerspective3d>();
+                                    mat.shader->setMat4(11, view->value); // viewMatrix
+                                    mat.shader->setMat4(12, pers->value); // projectionMatrix
+                                    mat.shader->setVec3(13, glm::vec3(10.0f)); // camPos
 
                                     glBindVertexArray(mesh.vaoId);
                                     glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
@@ -149,24 +147,6 @@ void Ruby::initOnUpdate() {
             // Idk if I should use the System or the Query. System is multithreaded.
 
             Ruby::renderMeshSystem.run();
-            // Ruby::renderables.each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-            //     auto e = it.entity(i);
-            //     // render cubes
-            //     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
-
-            //     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-            //     std::cout << "Draw: " << e.name() << std::endl;
-
-            //     mat.shader->setMat4((GLint) 10, worldTransform); // worldMatrix
-            //     // camera
-            //     mat.shader->setMat4((GLint) 11, glm::mat4(1.0f)); // viewMatrix
-            //     mat.shader->setMat4((GLint) 12, glm::mat4(1.0f)); // projectionMatrix
-            //     mat.shader->setVec3((GLint) 13, glm::vec3(1.0f)); // camPos
-            //     // it.world().get<Camera>();
-
-            //     glBindVertexArray(mesh.vaoId);
-            //     glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-            // });
         });
 
     // world.system<UiTag, Transform3d, Material>("RenderUi")
@@ -187,22 +167,12 @@ void Ruby::initOnUpdate() {
 }
 
 void Ruby::initPostUpdate() {
-    // world.system<Window>("Window")
-    //     .term_at(0)
-    //     .singleton()
-    //     .kind(flecs::PostUpdate)
-    //     .each([](flecs::iter &it, size_t i, Window &w) {
-    //         // Show rendering and get events
-    //         glfwSwapBuffers(w.m_window);
-    //         // m_imGuiActive = ImGui::IsAnyItemActive();
-    //         glfwPollEvents();
-    //     });
 }
 
 void Ruby::start() {
     // ---------- Window
     Window window;
-    if (window.initialize() != 0) {
+    if (window.initialize("Ruby") != 0) {
         return;
     }
     world.set<Window>(window);
@@ -236,31 +206,44 @@ void Ruby::start() {
         mat.shader = shader;
 
         Transform3d tr1;
-        tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
+        tr1.value = glm::mat4(1.0f);
         flecs::entity parent = this->world.entity("parent");
         parent.set<Transform3d>(tr1);
         parent.set<Mesh>(*cube);
         parent.set<MeshVao>(cubeBuffer);
         parent.set<Material>(mat);
 
-        // Transform3d tr2;
-        // tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
-        // flecs::entity child = this->world.entity("child").child_of(parent);
-        // child.set<Transform3d>(tr2);
-        // child.set<Mesh>(*cube);
-        // child.set<MeshVao>(cubeBuffer);
-        // child.set<Material>(mat);
+        Transform3d tr2;
+        tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
+        flecs::entity child = this->world.entity("child").child_of(parent);
+        child.set<Transform3d>(tr2);
+        child.set<Mesh>(*cube);
+        child.set<MeshVao>(cubeBuffer);
+        child.set<Material>(mat);
 
-        // Transform3d tr3;
-        // tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
-        // flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
-        // grandchild.set<Transform3d>(tr3);
-        // grandchild.set<Mesh>(*cube);
-        // grandchild.set<MeshVao>(cubeBuffer);
-        // grandchild.set<Material>(mat);
+        Transform3d tr3;
+        tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+        tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
+        flecs::entity grandchild = this->world.entity("grandchild"); //.child_of(child);
+        grandchild.set<Transform3d>(tr3);
+        grandchild.set<Mesh>(*cube);
+        grandchild.set<MeshVao>(cubeBuffer);
+        grandchild.set<Material>(mat);
+
+        CameraView3d view;
+        auto camPos = glm::vec3(10.0f);
+        // auto camDir = glm::vec3(0.0f);
+        auto camTarget = glm::vec3(0.0f);
+        auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        view.value = glm::lookAt(camPos, camTarget, camUp);
+        world.set<CameraView3d>(view);
+
+        CameraPerspective3d perspective;
+        auto fov = glm::radians(45.0f);
+        perspective.value = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
+        world.set<CameraPerspective3d>(perspective);
     }
 
-    
 
     // ---------- Engine loop
 
