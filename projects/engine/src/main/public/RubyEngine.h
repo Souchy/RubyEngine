@@ -14,6 +14,11 @@
 #include <string>
 #include <flecs.h>
 #include <glm/glm.hpp>
+#include <Window.h>
+#include "components/3d/Components3d.h"
+#include "nodes/3d/Node3d.h"
+#include "resources/Material.h"
+#include "resources/Mesh.h"
 
 namespace RubyEngine {
 class Greeter {

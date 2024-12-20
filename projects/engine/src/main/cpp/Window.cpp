@@ -132,3 +132,37 @@ void Window::MouseButtonCallback(int button, int action, int mods) {
     // 	std::cout << "[DEBUG][TODO] Shift pressed (Face selection)\n";
     // }
 }
+
+int Window::RenderLoop()
+{
+	float time = (float)glfwGetTime();
+	while (!glfwWindowShouldClose(m_window))
+	{
+		// Compute delta time between two frames
+		float new_time = (float)glfwGetTime();
+		const float delta_time = new_time - time;
+		time = new_time;
+
+		// Check inputs: Does ESC was pressed?
+		if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(m_window, true);
+		// if (!m_imGuiActive)
+		// {
+		// 	m_camera.keybordEvents(m_window, delta_time);
+		// }
+
+		// RenderScene(delta_time);
+		// RenderImgui();
+
+		// Show rendering and get events
+		glfwSwapBuffers(m_window);
+		// m_imGuiActive = ImGui::IsAnyItemActive();
+		glfwPollEvents();
+	}
+
+	// Cleanup
+	glfwDestroyWindow(m_window);
+	glfwTerminate();
+
+	return 0;
+}

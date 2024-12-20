@@ -21,4 +21,5 @@ public:
     void FramebufferSizeCallback(int width, int height);
     void MouseButtonCallback(int button, int action, int mods);
     void CursorPositionCallback(double xpos, double ypos);
+    int RenderLoop();
 };

@@ -3,12 +3,7 @@
  */
 
 #include "RubyEngine.h"
-#include "components/3d/Components3d.h"
-#include "nodes/3d/Node3d.h"
-#include "resources/Material.h"
-#include "resources/Mesh.h"
 #include <iostream>
-#include <stdlib.h>
 
 std::string RubyEngine::Greeter::greeting() {
     new Node3d();
@@ -16,7 +11,6 @@ std::string RubyEngine::Greeter::greeting() {
 }
 
 void Ruby::start() {
-
     world.observer<Transform3d>()
         .event(flecs::OnSet)
         .each([](flecs::entity e, Transform3d& p) {
@@ -59,8 +53,14 @@ void Ruby::start() {
     flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
     grandchild.set<Transform3d>(tr3);
 
-    while (world.progress()) {
+    Window window;
+    if(window.initialize() != 0) {
+        return;
     }
+    window.RenderLoop();    
+
+    // while (world.progress()) {
+    // }
 }
 
 glm::mat4 Ruby::computeWorldTransform(flecs::entity e) {
