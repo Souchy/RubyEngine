@@ -9,5 +9,9 @@
 int main () {
     RubyEngine::Greeter greeter;
     std::cout << greeter.greeting() << "!!!!!!!!" << std::endl;
+
+    Ruby ruby;
+    ruby.start();
+    
     return 0;
 }

@@ -12,12 +12,22 @@
 #endif
 
 #include <string>
+#include <flecs.h>
+#include <glm/glm.hpp>
 
 namespace RubyEngine {
-    class Greeter {
-        public:
-        std::string RUBYENGINE_EXPORT_FUNC greeting();
-    };
-}
+class Greeter {
+public:
+    std::string RUBYENGINE_EXPORT_FUNC greeting();
+};
+
+} // namespace RubyEngine
+
+class Ruby {
+public:
+    flecs::world world;
+    void start();
+    static glm::mat4 getWorldTransform(flecs::entity e);
+};
 
 #endif

@@ -1,0 +1,19 @@
+{
+  "dependencies": [
+    "assimp",
+    "cgltf",
+    "flecs",
+    "glad",
+    "glfw3",
+    "glm",
+    "imgui",
+    "imgui-node-editor",
+    "imguizmo",
+    "implot",
+    "joltphysics",
+    "simdjson",
+    "stb",
+    "tbb",
+    "tinygltf"
+  ]
+}

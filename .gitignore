@@ -1,3 +1,10 @@
+
+###### VCPKG
+vcpkg_installed
+
+###### Bazel
+bazel-*
+
 ###### VSCode
 .vscode/*
 
