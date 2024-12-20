@@ -1,5 +1,8 @@
 #pragma once
 
-class Material {
+#include <shaders/Shader.h>
 
+class Material {
+    Shader *shader;
+    // parameters...
 };

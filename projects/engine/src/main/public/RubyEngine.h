@@ -19,6 +19,7 @@
 #include "nodes/3d/Node3d.h"
 #include "resources/Material.h"
 #include "resources/Mesh.h"
+#include <shaders/Shader.h>
 
 namespace RubyEngine {
 class Greeter {

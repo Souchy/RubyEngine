@@ -12,53 +12,8 @@ std::string RubyEngine::Greeter::greeting() {
 }
 
 void Ruby::start() {
-
-    // world.system<Position, Velocity>("Move").kind(flecs::OnUpdate).each([](flecs::iter &it, size_t, Position &p, const Velocity &v) {
-    //     p.value += v.value * it.delta_time();
-    // });
-    // world.system<Position, Transform3d>("Transform").kind(flecs::PostUpdate).each([](Position &p, Transform3d &trans) {
-    // });
-    // world.system<Transform3d, WorldTransform3d>("Transform").each([](flecs::entity e, const Transform3d &localT, const WorldTransform3d &worldT) {
-    //     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
-
-    //     // std::printf("Transform {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-    //     std::cout << "Transform: " << e.name() << std::endl;
-    // });
-
-    // world.system<Transform3d, Mesh, Material>("Render").each([](flecs::entity e, const Transform3d &trans, const Mesh &mesh, const Material &mat) {
-    //     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
-
-    //     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-    //     std::cout << "Draw: " << e.name() << std::endl;
-    // });
-
-    Mesh *cube = Cube::generate();
-    Material mat;
-
-    Transform3d tr1;
-    tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
-    flecs::entity parent = this->world.entity("parent").add<Material>();
-    parent.set<Transform3d>(tr1);
-    parent.set<Mesh>(*cube);
-
-    Transform3d tr2;
-    tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
-    flecs::entity child = this->world.entity("child").child_of(parent).add<Material>();
-    child.set<Transform3d>(tr2);
-    child.set<Mesh>(*cube);
-
-    Transform3d tr3;
-    tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
-    flecs::entity grandchild = this->world.entity("grandchild").child_of(child).add<Material>();
-    grandchild.set<Transform3d>(tr3);
-    grandchild.set<Mesh>(*cube);
-
-    Window window;
-    if (window.initialize() != 0) {
-        return;
-    }
-    world.set<Window>(window);
-
+    
+    // ---------- Systems
     
     world.system<Window>("Inputs").term_at(0).singleton().kind(flecs::PreUpdate) //
         .each([](flecs::iter &it, size_t i, Window &w) {
@@ -94,6 +49,53 @@ void Ruby::start() {
             glfwPollEvents();
         });
 
+
+    // ---------- Entities
+    
+    Mesh *cube = Cube::generate();
+    Material mat;
+
+    Transform3d tr1;
+    tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
+    flecs::entity parent = this->world.entity("parent").add<Material>();
+    parent.set<Transform3d>(tr1);
+    parent.set<Mesh>(*cube);
+
+    Transform3d tr2;
+    tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
+    flecs::entity child = this->world.entity("child").child_of(parent).add<Material>();
+    child.set<Transform3d>(tr2);
+    child.set<Mesh>(*cube);
+
+    Transform3d tr3;
+    tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
+    flecs::entity grandchild = this->world.entity("grandchild").child_of(child).add<Material>();
+    grandchild.set<Transform3d>(tr3);
+    grandchild.set<Mesh>(*cube);
+
+    Window window;
+    if (window.initialize() != 0) {
+        return;
+    }
+    world.set<Window>(window);
+
+    // Shader* shader;
+    // shader->addShaderFromSource();
+
+	bool success = true;
+	auto m_mainShader = std::make_unique<Shader>();
+	success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, "shaders/basicShader.vert");
+	//success &= m_mainShader->addShaderFromSource(GL_GEOMETRY_SHADER, directory + "shaders/basicShader.geo");
+	success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, "shaders/basicShader.frag");
+	success &= m_mainShader->link();
+	if (!success)
+	{
+		std::cerr << "Error when loading main shader\n";
+		return;
+	}
+
+    // ---------- Engine loop
+
     float time = (float)glfwGetTime();
     float delta_time = 1.0f / 60.0f;
     while (world.progress(delta_time)) {
@@ -102,7 +104,8 @@ void Ruby::start() {
         delta_time = new_time - time;
         time = new_time;
     }
-    // Cleanup
+    
+    // ---------- Cleanup
     glfwDestroyWindow(window.m_window);
     glfwTerminate();
 }
