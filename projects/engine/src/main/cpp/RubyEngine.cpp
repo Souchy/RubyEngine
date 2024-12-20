@@ -57,10 +57,54 @@ void Ruby::start() {
     if (window.initialize() != 0) {
         return;
     }
-    window.RenderLoop();    
+    world.set<Window>(window);
 
-    // while (world.progress()) {
-    // }
+    
+    world.system<Window>("Inputs").term_at(0).singleton().kind(flecs::PreUpdate) //
+        .each([](flecs::iter &it, size_t i, Window &w) {
+            if (glfwGetKey(w.m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                glfwSetWindowShouldClose(w.m_window, true);
+            // if (!m_imGuiActive)
+            // {
+            // 	m_camera.keybordEvents(m_window, delta_time);
+            // }
+        });
+    world.system<Transform3d, Velocity>("Update").kind(flecs::OnUpdate) //
+        .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
+            auto mat = glm::translate(trans.value, vel.value * it.delta_time());
+            trans.value = mat;
+        });
+    world.system<Transform3d, Mesh, Material>("Render").kind(flecs::OnUpdate) //
+        .each([](flecs::iter &it, size_t i, const Transform3d &trans, const Mesh &mesh, const Material &mat) {
+            auto e = it.entity(i);
+            // render cubes
+            glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+
+            // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+            std::cout << "Draw: " << e.name() << std::endl;
+
+            // RenderScene(delta_time);
+            // RenderImgui();
+        });
+    world.system<Window>("Window").term_at(0).singleton().kind(flecs::PostUpdate) //
+        .each([](flecs::iter &it, size_t i, Window &w) {
+            // Show rendering and get events
+            glfwSwapBuffers(w.m_window);
+            // m_imGuiActive = ImGui::IsAnyItemActive();
+            glfwPollEvents();
+        });
+
+    float time = (float)glfwGetTime();
+    float delta_time = 1.0f / 60.0f;
+    while (world.progress(delta_time)) {
+        // Compute delta time between two frames
+        float new_time = (float)glfwGetTime();
+        delta_time = new_time - time;
+        time = new_time;
+    }
+    // Cleanup
+    glfwDestroyWindow(window.m_window);
+    glfwTerminate();
 }
 
 glm::mat4 Ruby::computeWorldTransform(flecs::entity e) {
