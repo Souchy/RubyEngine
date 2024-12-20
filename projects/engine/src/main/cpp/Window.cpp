@@ -56,8 +56,8 @@ int Window::initialize() {
     ImGui::StyleColorsDark();
 
     // Setup Platform/Renderer backends
-    // ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-    // ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Activate debug callback (if needed)
     // -----------------------------

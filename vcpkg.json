@@ -6,7 +6,17 @@
     "glad",
     "glfw3",
     "glm",
-    "imgui",
+    {
+      "name": "imgui",
+      "features": [
+        "glfw-binding",
+        "opengl3-binding",
+        "vulkan-binding",
+        "win32-binding",
+        "freetype-lunasvg",
+        "docking-experimental"
+      ]
+    },
     "imgui-node-editor",
     "imguizmo",
     "implot",
