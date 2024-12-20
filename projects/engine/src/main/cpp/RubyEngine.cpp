@@ -200,40 +200,38 @@ void Ruby::start() {
     initDefaultPipeline();
 
     // ---------- Entities
+    {
+        Mesh *cube = Cube::generate();
+        MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
+        Material mat;
 
-    Mesh *cube = Cube::generate();
-    MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
-    Material mat;
+        Transform3d tr1;
+        tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
+        flecs::entity parent = this->world.entity("parent").add<Material>();
+        parent.set<Transform3d>(tr1);
+        parent.set<Mesh>(*cube);
+        parent.set<MeshVao>(cubeBuffer);
 
-    Transform3d tr1;
-    tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
-    flecs::entity parent = this->world.entity("parent").add<Material>();
-    parent.set<Transform3d>(tr1);
-    parent.set<Mesh>(*cube);
-    parent.set<MeshVao>(cubeBuffer);
+        Transform3d tr2;
+        tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
+        flecs::entity child = this->world.entity("child").child_of(parent).add<Material>();
+        child.set<Transform3d>(tr2);
+        child.set<Mesh>(*cube);
+        child.set<MeshVao>(cubeBuffer);
 
-    Transform3d tr2;
-    tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
-    flecs::entity child = this->world.entity("child").child_of(parent).add<Material>();
-    child.set<Transform3d>(tr2);
-    child.set<Mesh>(*cube);
-    child.set<MeshVao>(cubeBuffer);
+        Transform3d tr3;
+        tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
+        flecs::entity grandchild = this->world.entity("grandchild").child_of(child).add<Material>();
+        grandchild.set<Transform3d>(tr3);
+        grandchild.set<Mesh>(*cube);
+        grandchild.set<MeshVao>(cubeBuffer);
+    }
 
-    Transform3d tr3;
-    tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
-    flecs::entity grandchild = this->world.entity("grandchild").child_of(child).add<Material>();
-    grandchild.set<Transform3d>(tr3);
-    grandchild.set<Mesh>(*cube);
-    grandchild.set<MeshVao>(cubeBuffer);
-
-    // Shader* shader;
-    // shader->addShaderFromSource();
     
     char buffer[255];
     GetModuleFileName(NULL, buffer, 255);
     auto exepath = std::string(buffer);
     auto dir = exepath.substr(0, exepath.find_last_of("\\/"));
-    // auto shad = dir + "/res/base.vert";
 
     bool success = true;
     auto m_mainShader = std::make_unique<Shader>();
