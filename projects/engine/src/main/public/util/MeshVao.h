@@ -11,12 +11,12 @@ enum VAO_IDs {
     NumVAOs,
 };
 enum Buffer_IDs {
-    Indices,
     Position,
     Normal,
     UV,
     Color,
     // Tangent,
+    Indices,
     NumBuffers
 };
 

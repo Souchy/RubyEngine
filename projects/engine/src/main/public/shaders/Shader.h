@@ -119,6 +119,49 @@ public:
     inline void setVec3(GLint location, const glm::vec3 &vec) const { glProgramUniform3fv(m_ID, location, 1, &vec[0]); }
     inline void setVec2(GLint location, const glm::vec2 &vec) const { glProgramUniform2fv(m_ID, location, 1, &vec[0]); }
 
+    // ------------------------------------------------------------------------
+    // Souchy's uniforms
+    struct BuiltinShaderVertexLocations {
+        GLint worldMatrix = 0;
+        GLint viewMatrix = 1;
+        GLint projectionMatrix = 2;
+        GLint camPos;
+
+        GLint position = 0;
+        GLint normal = 1;
+        GLint uv = 2;
+        GLint color = 3;
+
+        GLint boneIndices;
+        GLint boneWeights;
+
+        GLint time = 0;
+    } builtinShaderVertexLocations;
+
+    struct BuiltinShaderFragmentLocations {
+        GLint useVertexColor;
+        GLint color;
+        GLint n;
+        GLint ks;
+        GLint kd;
+        GLint ka;
+        GLint shadowMapLoc;
+        GLint textureDiffuseLoc = 1;
+        GLint textureNormalLoc = 2;
+    } builtinShaderFragmentLocations;
+
+    struct BuiltinShaderDebugLocations {
+        GLint showUVsLoc;
+        GLint showNormalsLoc;
+        GLint showShadowsLoc;
+        GLint debugOmniLoc;
+        GLint debugViewLoc;
+        GLint debugDirLoc;
+        GLint debugDepthLoc;
+        GLint showNormalMapLoc;
+    } builtinShaderDebugLocations;
+    // ------------------------------------------------------------------------
+
 private:
     // Shader program id
     GLuint m_ID;
