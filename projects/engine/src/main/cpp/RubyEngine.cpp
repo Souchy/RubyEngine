@@ -10,12 +10,41 @@ flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
 flecs::system Ruby::renderMeshSystem;
 
 std::string RubyEngine::Greeter::greeting() {
-    new Node3d();
     return std::string("Hello, World!");
 }
 
 void Ruby::initDefaultPipeline() {
+    Ruby::renderables = world.query_builder<Transform3d, MeshVao, Material>()
+                            .cached()
+                            .query_flags(EcsQueryMatchEmptyTables)
+                            .build();
 
+    Ruby::renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderMesh")
+                                 .kind(0) //
+                                 .multi_threaded()
+                                 .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+                                     auto e = it.entity(i);
+                                     // render cubes
+                                     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+
+                                     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+                                     // std::cout << "Draw: " << e.name() << std::endl;
+
+                                     mat.shader->setMat4(10, worldTransform);
+                                     // camera
+                                     // mat.shader->setMat4(projectionMatrixLoc, m_camera->projectionMatrix());
+                                     // mat.shader->setMat4(viewMatrixLoc, m_camera->viewMatrix());
+                                     // mat.shader->setVec3(viewPosLoc, m_camera->position());
+
+                                     glBindVertexArray(mesh.vaoId);
+                                     glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+                                 });
+    initPreUpdate();
+    initOnUpdate();
+    initPostUpdate();
+}
+
+void Ruby::initPreUpdate() {
     world.system<Window>("Inputs").term_at(0).singleton().kind(flecs::PreUpdate) //
         .each([](flecs::iter &it, size_t i, Window &w) {
             if (glfwGetKey(w.m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -25,7 +54,9 @@ void Ruby::initDefaultPipeline() {
             // 	m_camera.keybordEvents(m_window, delta_time);
             // }
         });
+}
 
+void Ruby::initOnUpdate() {
     world.system<Transform3d, Velocity>("Update").kind(flecs::OnUpdate) //
         .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
             auto mat = glm::translate(trans.value, vel.value * it.delta_time());
@@ -61,32 +92,6 @@ void Ruby::initDefaultPipeline() {
     //         glEnable(GL_DEPTH_TEST);
     //     });
 
-    Ruby::renderables = world.query_builder<Transform3d, MeshVao, Material>()
-                            .cached()
-                            .query_flags(EcsQueryMatchEmptyTables)
-                            .build();
-
-    Ruby::renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderMesh")
-                           .kind(0) //
-                           .multi_threaded()
-                           .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                               auto e = it.entity(i);
-                               // render cubes
-                               glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
-
-                               // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-                               // std::cout << "Draw: " << e.name() << std::endl;
-
-                               mat.shader->setMat4(10, worldTransform);
-                               // camera
-                               // mat.shader->setMat4(projectionMatrixLoc, m_camera->projectionMatrix());
-                               // mat.shader->setMat4(viewMatrixLoc, m_camera->viewMatrix());
-                               // mat.shader->setVec3(viewPosLoc, m_camera->position());
-
-                               glBindVertexArray(mesh.vaoId);
-                               glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-                           });
-
     world.system<Window, Shader>("RenderPass_Color")
         .kind(flecs::OnUpdate) //
         .term_at(0)
@@ -104,7 +109,7 @@ void Ruby::initDefaultPipeline() {
             // renderNode(root);
 
             // Idk if I should use the System or the Query. System is multithreaded.
-    
+
             // Ruby::renderMeshSystem.run();
             Ruby::renderables.each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
                 auto e = it.entity(i);
@@ -130,7 +135,9 @@ void Ruby::initDefaultPipeline() {
     //     .each([](flecs::iter &it, size_t i, UiTag &ui, const Transform3d &trans, const Material &mat) {
 
     //     });
-    
+}
+
+void Ruby::initPostUpdate() {
     world.system<Window>("Window").term_at(0).singleton().kind(flecs::PostUpdate) //
         .each([](flecs::iter &it, size_t i, Window &w) {
             // Show rendering and get events

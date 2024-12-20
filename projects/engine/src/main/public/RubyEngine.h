@@ -43,6 +43,9 @@ public:
     static glm::mat4 computeWorldTransform(flecs::entity e);
 
     void initDefaultPipeline();
+    void initPreUpdate();
+    void initOnUpdate();
+    void initPostUpdate();
     void start();
 };
 
