@@ -14,12 +14,14 @@
 #include <string>
 #include <flecs.h>
 #include <glm/glm.hpp>
+
 #include <Window.h>
-#include "components/3d/Components3d.h"
+#include <shaders/Shader.h>
 #include "nodes/3d/Node3d.h"
+#include "components/3d/Components3d.h"
 #include "resources/Material.h"
 #include "resources/Mesh.h"
-#include <shaders/Shader.h>
+#include <util/MeshVao.h>
 
 namespace RubyEngine {
 class Greeter {
@@ -31,9 +33,11 @@ public:
 
 class Ruby {
 public:
-    flecs::world world;
-    void start();
+    static flecs::world world;
+    static flecs::query<Transform3d, MeshVao, Material> renderables;
     static glm::mat4 computeWorldTransform(flecs::entity e);
+
+    void start();
 };
 
 #endif

@@ -4,7 +4,11 @@
 
 #include "RubyEngine.h"
 #include <iostream>
+#include <util/MeshVao.h>
 #include <util/shapes/Cube.h>
+
+flecs::world Ruby::world; // = new flecs::world();
+flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
 
 std::string RubyEngine::Greeter::greeting() {
     new Node3d();
@@ -12,9 +16,10 @@ std::string RubyEngine::Greeter::greeting() {
 }
 
 void Ruby::start() {
-    
+
     // ---------- Systems
-    
+    world.set_threads(4);
+
     world.system<Window>("Inputs").term_at(0).singleton().kind(flecs::PreUpdate) //
         .each([](flecs::iter &it, size_t i, Window &w) {
             if (glfwGetKey(w.m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -29,18 +34,99 @@ void Ruby::start() {
             auto mat = glm::translate(trans.value, vel.value * it.delta_time());
             trans.value = mat;
         });
-    world.system<Transform3d, Mesh, Material>("Render").kind(flecs::OnUpdate) //
-        .each([](flecs::iter &it, size_t i, const Transform3d &trans, const Mesh &mesh, const Material &mat) {
-            auto e = it.entity(i);
-            // render cubes
-            glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
 
-            // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-            std::cout << "Draw: " << e.name() << std::endl;
+    // world.system<Window, Shader>("RenderPass_Depth").kind(flecs::OnUpdate) //
+    //     .run([]() {
+    //         // // 2. then render scene as normal with shadow mapping (using depth map)
+    //         glViewport(0, 0, *m_windowWidth, *m_windowHeight);
+    //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //         glEnable(GL_CULL_FACE);
+    //         glCullFace(GL_BACK);
+    //         // Render objects
+    //         glUseProgram(m_mainShader->programId());
+    //         glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
+    //         // renderNode(root);
+    //     });
 
-            // RenderScene(delta_time);
-            // RenderImgui();
+    // world.system<MeshVao, Shader>("RenderPass_Sky").kind(flecs::OnUpdate) //
+    //     .run([](const MeshVao& vao, const Shader& shader) {
+    //         glDisable(GL_DEPTH_TEST);
+    //         glBindVertexArray(vao.vaoId);
+    //         //  skycubemap
+    //         glUseProgram(shader.programId());
+    //         // Activez les unités de texture
+    //         shader.setMat3(m_skyShaderUniform.viewMatrixCiel, glm::mat3(m_camera->viewMatrix()));
+    //         shader.setMat4(m_skyShaderUniform.projectionMatrixCiel, m_camera->projectionMatrix());
+    //         // glBindTextureUnit(3, textSky.skyDomeTextureID);
+    //         glBindTextureUnit(3, textSky.jourTextureID);
+    //         glBindTextureUnit(4, textSky.nuitTextureID);
+    //         glDrawElements(GL_TRIANGLES, vao.indexSize, GL_UNSIGNED_INT, 0);
+    //         glEnable(GL_DEPTH_TEST);
+    //     });
+
+    Ruby::renderables = world.query_builder<Transform3d, MeshVao, Material>()
+                            .cached()
+                            .query_flags(EcsQueryMatchEmptyTables)
+                            .build();
+    // flecs::system renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderScene")
+    //                                      .kind(0) //
+    //                                      .multi_threaded()
+    //                                      .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+    //                                          auto e = it.entity(i);
+    //                                          // render cubes
+    //                                          glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+
+    //                                          // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+    //                                          // std::cout << "Draw: " << e.name() << std::endl;
+
+    //                                          mat.shader->setMat4(10, worldTransform);
+    //                                          // camera
+    //                                          // mat.shader->setMat4(projectionMatrixLoc, m_camera->projectionMatrix());
+    //                                          // mat.shader->setMat4(viewMatrixLoc, m_camera->viewMatrix());
+    //                                          // mat.shader->setVec3(viewPosLoc, m_camera->position());
+
+    //                                          glBindVertexArray(mesh.vaoId);
+    //                                          glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+    //                                      });
+    world.system<Window, Shader>("RenderPass_Color")
+        .kind(flecs::OnUpdate) //
+        .term_at(0)
+        .singleton()
+        .each([](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
+            // // 2. then render scene as normal with shadow mapping (using depth map)
+            glViewport(0, 0, w.m_windowWidth, w.m_windowHeight);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+            // Render objects
+            glUseProgram(shader.programId());
+            // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
+            // renderNode(root);
+
+            Ruby::renderables.each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+                auto e = it.entity(i);
+                // render cubes
+                glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+
+                // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+                // std::cout << "Draw: " << e.name() << std::endl;
+
+                mat.shader->setMat4(10, worldTransform);
+                // camera
+                // mat.shader->setMat4(projectionMatrixLoc, m_camera->projectionMatrix());
+                // mat.shader->setMat4(viewMatrixLoc, m_camera->viewMatrix());
+                // mat.shader->setVec3(viewPosLoc, m_camera->position());
+                // it.world().get<Camera>();
+
+                glBindVertexArray(mesh.vaoId);
+                glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+            });
         });
+
+    // world.system<Transform2d, MeshVao, Material>("RenderUi").kind(flecs::OnUpdate) //
+    //     .each([](flecs::iter &it, size_t i, const Transform2d &trans, const MeshVao &mesh, const Material &mat) {
+    //     });
     world.system<Window>("Window").term_at(0).singleton().kind(flecs::PostUpdate) //
         .each([](flecs::iter &it, size_t i, Window &w) {
             // Show rendering and get events
@@ -49,10 +135,10 @@ void Ruby::start() {
             glfwPollEvents();
         });
 
-
     // ---------- Entities
-    
+
     Mesh *cube = Cube::generate();
+    MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
     Material mat;
 
     Transform3d tr1;
@@ -60,18 +146,21 @@ void Ruby::start() {
     flecs::entity parent = this->world.entity("parent").add<Material>();
     parent.set<Transform3d>(tr1);
     parent.set<Mesh>(*cube);
+    parent.set<MeshVao>(cubeBuffer);
 
     Transform3d tr2;
     tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
     flecs::entity child = this->world.entity("child").child_of(parent).add<Material>();
     child.set<Transform3d>(tr2);
     child.set<Mesh>(*cube);
+    child.set<MeshVao>(cubeBuffer);
 
     Transform3d tr3;
     tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
     flecs::entity grandchild = this->world.entity("grandchild").child_of(child).add<Material>();
     grandchild.set<Transform3d>(tr3);
     grandchild.set<Mesh>(*cube);
+    grandchild.set<MeshVao>(cubeBuffer);
 
     Window window;
     if (window.initialize() != 0) {
@@ -82,17 +171,16 @@ void Ruby::start() {
     // Shader* shader;
     // shader->addShaderFromSource();
 
-	bool success = true;
-	auto m_mainShader = std::make_unique<Shader>();
-	success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, "shaders/basicShader.vert");
-	//success &= m_mainShader->addShaderFromSource(GL_GEOMETRY_SHADER, directory + "shaders/basicShader.geo");
-	success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, "shaders/basicShader.frag");
-	success &= m_mainShader->link();
-	if (!success)
-	{
-		std::cerr << "Error when loading main shader\n";
-		return;
-	}
+    bool success = true;
+    auto m_mainShader = std::make_unique<Shader>();
+    success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, "shaders/basicShader.vert");
+    // success &= m_mainShader->addShaderFromSource(GL_GEOMETRY_SHADER, directory + "shaders/basicShader.geo");
+    success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, "shaders/basicShader.frag");
+    success &= m_mainShader->link();
+    if (!success) {
+        std::cerr << "Error when loading main shader\n";
+        return;
+    }
 
     // ---------- Engine loop
 
@@ -104,7 +192,7 @@ void Ruby::start() {
         delta_time = new_time - time;
         time = new_time;
     }
-    
+
     // ---------- Cleanup
     glfwDestroyWindow(window.m_window);
     glfwTerminate();
