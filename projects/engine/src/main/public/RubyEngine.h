@@ -19,9 +19,12 @@
 #include <shaders/Shader.h>
 #include "nodes/3d/Node3d.h"
 #include "components/3d/Components3d.h"
+#include <components/Components.h>
 #include "resources/Material.h"
 #include "resources/Mesh.h"
 #include <util/MeshVao.h>
+#include <util/shapes/Cube.h>
+
 
 namespace RubyEngine {
 class Greeter {
@@ -35,8 +38,11 @@ class Ruby {
 public:
     static flecs::world world;
     static flecs::query<Transform3d, MeshVao, Material> renderables;
+    static flecs::system renderMeshSystem;
+
     static glm::mat4 computeWorldTransform(flecs::entity e);
 
+    void initDefaultPipeline();
     void start();
 };
 
