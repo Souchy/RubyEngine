@@ -25,7 +25,8 @@ cc_library(
     }),
     includes = select({
         "@bazel_tools//src/conditions:windows": [
-            "x64-windows/include/"
+            "x64-windows/include",
+            "x64-windows/include/**/*.h"
         ],
         # "@bazel_tools//src/conditions:darwin": ["x64-osx/include/glm/"],
         # "//conditions:default": ["x64-linux/include/glm/"],
