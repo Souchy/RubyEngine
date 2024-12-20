@@ -23,10 +23,10 @@ cc_library(
     deps = ["@vcpkg//:libs"],
 
     data = glob([
-        "engine/src/**/*.vert",
-        "engine/src/**/*.frag"
+        "engine/res/**/*.vert",
+        "engine/res/**/*.frag"
         ]),
-        
+
     # additional_compiler_inputs = [
     #     "std:c++17"
     # ]

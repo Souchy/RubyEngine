@@ -4,6 +4,9 @@
 
 #include "RubyEngine.h"
 #include <iostream>
+#include <windows.h>
+#include <string>
+#include <libloaderapi.h>
 
 flecs::world Ruby::world; // = new flecs::world();
 flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
@@ -70,8 +73,8 @@ void Ruby::initOnUpdate() {
     ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
     // ecs_add_pair(world, Collisions, EcsDependsOn, Physics);
     ecs_add_pair(world, RenderingDepth, EcsDependsOn, Physics);
-    ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingColor);
-    ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingDepth);
+    ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingDepth);
+    ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingColor);
 
     // ----- Systems
 
@@ -225,16 +228,22 @@ void Ruby::start() {
 
     // Shader* shader;
     // shader->addShaderFromSource();
+    
+    char buffer[255];
+    GetModuleFileName(NULL, buffer, 255);
+    auto exepath = std::string(buffer);
+    auto dir = exepath.substr(0, exepath.find_last_of("\\/"));
+    // auto shad = dir + "/res/base.vert";
 
-    // bool success = true;
-    // auto m_mainShader = std::make_unique<Shader>();
-    // success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, "shaders/basicShader.vert");
-    // success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, "shaders/basicShader.frag");
-    // success &= m_mainShader->link();
-    // if (!success) {
-    //     std::cerr << "Error when loading main shader\n";
-    //     return;
-    // }
+    bool success = true;
+    auto m_mainShader = std::make_unique<Shader>();
+    success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, dir + "/res/base.vert");
+    success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, dir + "/res/base.frag");
+    success &= m_mainShader->link();
+    if (!success) {
+        std::cerr << "Error when loading main shader\n";
+        return;
+    }
 
     // ---------- Engine loop
 
