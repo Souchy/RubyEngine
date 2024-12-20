@@ -33,11 +33,11 @@ void Ruby::initDefaultPipeline() {
                                     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
                                     std::cout << "Draw: " << e.name() << std::endl;
 
-                                    // mat.shader->setMat4((GLint) 10, worldTransform); // worldMatrix
-                                    // // camera
-                                    // mat.shader->setMat4((GLint) 11, glm::mat4(1.0f)); // viewMatrix
-                                    // mat.shader->setMat4((GLint) 12, glm::mat4(1.0f)); // projectionMatrix
-                                    // mat.shader->setVec3((GLint) 13, glm::vec3(1.0f)); // camPos
+                                    mat.shader->setMat4((GLint) 10, worldTransform); // worldMatrix
+                                    // camera
+                                    mat.shader->setMat4((GLint) 11, glm::mat4(1.0f)); // viewMatrix
+                                    mat.shader->setMat4((GLint) 12, glm::mat4(1.0f)); // projectionMatrix
+                                    mat.shader->setVec3((GLint) 13, glm::vec3(1.0f)); // camPos
                                     // it.world().get<Camera>();
 
                                     glBindVertexArray(mesh.vaoId);
@@ -69,6 +69,7 @@ void Ruby::initOnUpdate() {
     ecs_entity_t RenderingDepth = ecs_new_w_id(world, EcsPhase);
     ecs_entity_t RenderingColor = ecs_new_w_id(world, EcsPhase);
     ecs_entity_t RenderingUi = ecs_new_w_id(world, EcsPhase);
+    ecs_entity_t RenderWindow = ecs_new_w_id(world, EcsPhase);
 
     // Phases can (but don't have to) depend on other phases which forces ordering
     ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
@@ -76,6 +77,7 @@ void Ruby::initOnUpdate() {
     ecs_add_pair(world, RenderingDepth, EcsDependsOn, Physics);
     ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingDepth);
     ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingColor);
+    ecs_add_pair(world, RenderWindow, EcsDependsOn, RenderingUi);
 
     // ----- Systems
 
@@ -171,19 +173,30 @@ void Ruby::initOnUpdate() {
     //     .kind(RenderingUi) //
     //     .each([](flecs::iter &it, size_t i, UiTag &ui, const Transform3d &trans, const Material &mat) {
     //     });
-}
-
-void Ruby::initPostUpdate() {
+    
     world.system<Window>("Window")
         .term_at(0)
         .singleton()
-        .kind(flecs::PostUpdate)
+        .kind(RenderWindow)
         .each([](flecs::iter &it, size_t i, Window &w) {
             // Show rendering and get events
             glfwSwapBuffers(w.m_window);
             // m_imGuiActive = ImGui::IsAnyItemActive();
             glfwPollEvents();
         });
+}
+
+void Ruby::initPostUpdate() {
+    // world.system<Window>("Window")
+    //     .term_at(0)
+    //     .singleton()
+    //     .kind(flecs::PostUpdate)
+    //     .each([](flecs::iter &it, size_t i, Window &w) {
+    //         // Show rendering and get events
+    //         glfwSwapBuffers(w.m_window);
+    //         // m_imGuiActive = ImGui::IsAnyItemActive();
+    //         glfwPollEvents();
+    //     });
 }
 
 void Ruby::start() {
@@ -193,43 +206,8 @@ void Ruby::start() {
         return;
     }
     world.set<Window>(window);
-
-    // ---------- Systems
-    world.set_threads(4);
-    initDefaultPipeline();
-
-    // ---------- Entities
-    {
-        Mesh *cube = Cube::generate();
-        MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
-        Material mat;
-
-        Transform3d tr1;
-        tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
-        flecs::entity parent = this->world.entity("parent");
-        parent.set<Transform3d>(tr1);
-        parent.set<Mesh>(*cube);
-        parent.set<MeshVao>(cubeBuffer);
-        parent.set<Material>(mat);
-
-        Transform3d tr2;
-        tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
-        flecs::entity child = this->world.entity("child").child_of(parent);
-        child.set<Transform3d>(tr2);
-        child.set<Mesh>(*cube);
-        child.set<MeshVao>(cubeBuffer);
-        child.set<Material>(mat);
-
-        Transform3d tr3;
-        tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
-        flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
-        grandchild.set<Transform3d>(tr3);
-        grandchild.set<Mesh>(*cube);
-        grandchild.set<MeshVao>(cubeBuffer);
-        grandchild.set<Material>(mat);
-    }
-
     
+    // ---------- Shaders
     char buffer[255];
     GetModuleFileName(NULL, buffer, 255);
     auto exepath = std::string(buffer);
@@ -245,6 +223,44 @@ void Ruby::start() {
         return;
     }
     world.set<Shader>(*shader);
+
+    // ---------- Systems
+    world.set_threads(4);
+    initDefaultPipeline();
+
+    // ---------- Entities
+    {
+        Mesh *cube = Cube::generate();
+        MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
+        Material mat;
+        mat.shader = shader;
+
+        Transform3d tr1;
+        tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
+        flecs::entity parent = this->world.entity("parent");
+        parent.set<Transform3d>(tr1);
+        parent.set<Mesh>(*cube);
+        parent.set<MeshVao>(cubeBuffer);
+        parent.set<Material>(mat);
+
+        // Transform3d tr2;
+        // tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
+        // flecs::entity child = this->world.entity("child").child_of(parent);
+        // child.set<Transform3d>(tr2);
+        // child.set<Mesh>(*cube);
+        // child.set<MeshVao>(cubeBuffer);
+        // child.set<Material>(mat);
+
+        // Transform3d tr3;
+        // tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
+        // flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
+        // grandchild.set<Transform3d>(tr3);
+        // grandchild.set<Mesh>(*cube);
+        // grandchild.set<MeshVao>(cubeBuffer);
+        // grandchild.set<Material>(mat);
+    }
+
+    
 
     // ---------- Engine loop
 
