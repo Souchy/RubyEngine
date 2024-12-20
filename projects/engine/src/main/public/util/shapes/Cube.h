@@ -53,15 +53,16 @@ public:
         };
 		// colors per vertex
         mesh->colors = {
-			glm::vec4(1.0f),
-			glm::vec4(1.0f),
-			glm::vec4(1.0f),
-			glm::vec4(1.0f),
-			
-			glm::vec4(1.0f),
-			glm::vec4(1.0f),
-			glm::vec4(1.0f),
-			glm::vec4(1.0f),
+			// front (or back?) face
+            glm::vec4(0, 0, 0, 1), 	// 0
+            glm::vec4(1, 0, 0, 1), 	// 1
+            glm::vec4(1, 1, 0, 1), 	// 2
+            glm::vec4(0, 1, 0, 1), 	// 3
+			// back (or front?) face
+            glm::vec4(0, 0, 1, 1), 	// 4
+            glm::vec4(1, 0, 1, 1), 	// 5
+            glm::vec4(1, 1, 1, 1), 	// 6
+            glm::vec4(0, 1, 1, 1) 	// 7
         };
         return mesh;
     }
