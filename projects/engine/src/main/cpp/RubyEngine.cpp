@@ -4,6 +4,7 @@
 
 #include "RubyEngine.h"
 #include <iostream>
+#include <util/shapes/Cube.h>
 
 std::string RubyEngine::Greeter::greeting() {
     new Node3d();
@@ -11,25 +12,18 @@ std::string RubyEngine::Greeter::greeting() {
 }
 
 void Ruby::start() {
-    world.observer<Transform3d>()
-        .event(flecs::OnSet)
-        .each([](flecs::entity e, Transform3d& p) {
-            WorldTransform3d worldTransform;
-            worldTransform.value = Ruby::computeWorldTransform(e);
-            e.set<WorldTransform3d>(worldTransform);
-        });
 
     // world.system<Position, Velocity>("Move").kind(flecs::OnUpdate).each([](flecs::iter &it, size_t, Position &p, const Velocity &v) {
     //     p.value += v.value * it.delta_time();
     // });
     // world.system<Position, Transform3d>("Transform").kind(flecs::PostUpdate).each([](Position &p, Transform3d &trans) {
     // });
-    world.system<Transform3d, WorldTransform3d>("Transform").each([](flecs::entity e, const Transform3d &localT, const WorldTransform3d &worldT) {
-        // glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+    // world.system<Transform3d, WorldTransform3d>("Transform").each([](flecs::entity e, const Transform3d &localT, const WorldTransform3d &worldT) {
+    //     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
 
-        // std::printf("Transform {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-        std::cout << "Transform: " << e.name() << std::endl;
-    });
+    //     // std::printf("Transform {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+    //     std::cout << "Transform: " << e.name() << std::endl;
+    // });
 
     // world.system<Transform3d, Mesh, Material>("Render").each([](flecs::entity e, const Transform3d &trans, const Mesh &mesh, const Material &mat) {
     //     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
@@ -38,23 +32,29 @@ void Ruby::start() {
     //     std::cout << "Draw: " << e.name() << std::endl;
     // });
 
+    Mesh *cube = Cube::generate();
+    Material mat;
+
     Transform3d tr1;
     tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
-    flecs::entity parent = this->world.entity("parent");
+    flecs::entity parent = this->world.entity("parent").add<Material>();
     parent.set<Transform3d>(tr1);
+    parent.set<Mesh>(*cube);
 
     Transform3d tr2;
     tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
-    flecs::entity child = this->world.entity("child").child_of(parent);
+    flecs::entity child = this->world.entity("child").child_of(parent).add<Material>();
     child.set<Transform3d>(tr2);
-    
+    child.set<Mesh>(*cube);
+
     Transform3d tr3;
     tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
-    flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
+    flecs::entity grandchild = this->world.entity("grandchild").child_of(child).add<Material>();
     grandchild.set<Transform3d>(tr3);
+    grandchild.set<Mesh>(*cube);
 
     Window window;
-    if(window.initialize() != 0) {
+    if (window.initialize() != 0) {
         return;
     }
     window.RenderLoop();    
@@ -66,7 +66,7 @@ void Ruby::start() {
 glm::mat4 Ruby::computeWorldTransform(flecs::entity e) {
     glm::mat4 mat = e.get<Transform3d>()->value;
     auto parent = e.parent();
-    if(parent && parent.has<Transform3d>()) {
+    if (parent && parent.has<Transform3d>()) {
         mat *= Ruby::computeWorldTransform(parent);
     }
     return mat;
