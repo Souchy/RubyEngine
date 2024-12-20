@@ -14,3 +14,8 @@ struct Transform3d {
 	glm::mat4 value;
 };
 
+struct WorldTransform3d {
+	glm::mat4 value;
+};
+
+

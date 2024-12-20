@@ -27,7 +27,7 @@ class Ruby {
 public:
     flecs::world world;
     void start();
-    static glm::mat4 getWorldTransform(flecs::entity e);
+    static glm::mat4 computeWorldTransform(flecs::entity e);
 };
 
 #endif

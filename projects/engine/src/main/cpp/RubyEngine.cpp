@@ -17,6 +17,33 @@ std::string RubyEngine::Greeter::greeting() {
 
 void Ruby::start() {
 
+    world.observer<Transform3d>()
+        .event(flecs::OnSet)
+        .each([](flecs::entity e, Transform3d& p) {
+            WorldTransform3d worldTransform;
+            worldTransform.value = Ruby::computeWorldTransform(e);
+            e.set<WorldTransform3d>(worldTransform);
+        });
+
+    // world.system<Position, Velocity>("Move").kind(flecs::OnUpdate).each([](flecs::iter &it, size_t, Position &p, const Velocity &v) {
+    //     p.value += v.value * it.delta_time();
+    // });
+    // world.system<Position, Transform3d>("Transform").kind(flecs::PostUpdate).each([](Position &p, Transform3d &trans) {
+    // });
+    world.system<Transform3d, WorldTransform3d>("Transform").each([](flecs::entity e, const Transform3d &localT, const WorldTransform3d &worldT) {
+        // glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+
+        // std::printf("Transform {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+        std::cout << "Transform: " << e.name() << std::endl;
+    });
+
+    // world.system<Transform3d, Mesh, Material>("Render").each([](flecs::entity e, const Transform3d &trans, const Mesh &mesh, const Material &mat) {
+    //     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+
+    //     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+    //     std::cout << "Draw: " << e.name() << std::endl;
+    // });
+
     Transform3d tr1;
     tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
     flecs::entity parent = this->world.entity("parent");
@@ -32,35 +59,15 @@ void Ruby::start() {
     flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
     grandchild.set<Transform3d>(tr3);
 
-
-    // world.system<Position, Velocity>("Move").kind(flecs::OnUpdate).each([](flecs::iter &it, size_t, Position &p, const Velocity &v) {
-    //     p.value += v.value * it.delta_time();
-    // });
-    // world.system<Position, Transform3d>("Transform").kind(flecs::PostUpdate).each([](Position &p, Transform3d &trans) {
-    // });
-    world.system<Transform3d>("Transform").each([](flecs::entity e, const Transform3d &trans) {
-        glm::mat4 worldTransform = Ruby::getWorldTransform(e);
-
-        // std::printf("Transform {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-        std::cout << "Transform: " << e.name() << std::endl;
-    });
-
-    // world.system<Transform3d, Mesh, Material>("Render").each([](flecs::entity e, const Transform3d &trans, const Mesh &mesh, const Material &mat) {
-    //     glm::mat4 worldTransform = Ruby::getWorldTransform(e);
-
-    //     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-    //     std::cout << "Draw: " << e.name() << std::endl;
-    // });
-
     while (world.progress()) {
     }
 }
 
-glm::mat4 Ruby::getWorldTransform(flecs::entity e) {
+glm::mat4 Ruby::computeWorldTransform(flecs::entity e) {
     glm::mat4 mat = e.get<Transform3d>()->value;
     auto parent = e.parent();
     if(parent && parent.has<Transform3d>()) {
-        mat *= Ruby::getWorldTransform(parent);
+        mat *= Ruby::computeWorldTransform(parent);
     }
     return mat;
 }
