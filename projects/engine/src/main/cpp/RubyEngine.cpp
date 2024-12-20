@@ -8,7 +8,7 @@
 #include <string>
 #include <libloaderapi.h>
 
-flecs::world Ruby::world; // = new flecs::world();
+flecs::world Ruby::world;
 flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
 flecs::system Ruby::renderMeshSystem;
 
@@ -24,24 +24,25 @@ void Ruby::initDefaultPipeline() {
 
     Ruby::renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderMesh")
                                  .kind(0) //
-                                 .multi_threaded()
+                                //  .multi_threaded()
                                  .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                                     auto e = it.entity(i);
-                                     // render cubes
-                                     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+                                    auto e = it.entity(i);
+                                    // render cubes
+                                    glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
 
-                                     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-                                     // std::cout << "Draw: " << e.name() << std::endl;
+                                    // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+                                    std::cout << "Draw: " << e.name() << std::endl;
 
-                                     mat.shader->setMat4(10, worldTransform);
-                                     // camera
-                                     // mat.shader->setMat4(projectionMatrixLoc, m_camera->projectionMatrix());
-                                     // mat.shader->setMat4(viewMatrixLoc, m_camera->viewMatrix());
-                                     // mat.shader->setVec3(viewPosLoc, m_camera->position());
+                                    // mat.shader->setMat4((GLint) 10, worldTransform); // worldMatrix
+                                    // // camera
+                                    // mat.shader->setMat4((GLint) 11, glm::mat4(1.0f)); // viewMatrix
+                                    // mat.shader->setMat4((GLint) 12, glm::mat4(1.0f)); // projectionMatrix
+                                    // mat.shader->setVec3((GLint) 13, glm::vec3(1.0f)); // camPos
+                                    // it.world().get<Camera>();
 
-                                     glBindVertexArray(mesh.vaoId);
-                                     glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-                                 });
+                                    glBindVertexArray(mesh.vaoId);
+                                    glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+                                });
     initPreUpdate();
     initOnUpdate();
     initPostUpdate();
@@ -145,25 +146,25 @@ void Ruby::initOnUpdate() {
 
             // Idk if I should use the System or the Query. System is multithreaded.
 
-            // Ruby::renderMeshSystem.run();
-            Ruby::renderables.each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                auto e = it.entity(i);
-                // render cubes
-                glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+            Ruby::renderMeshSystem.run();
+            // Ruby::renderables.each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+            //     auto e = it.entity(i);
+            //     // render cubes
+            //     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
 
-                // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
-                // std::cout << "Draw: " << e.name() << std::endl;
+            //     // std::printf("Draw {%s} at {%f}\n", e.name(), worldTransform[0][1]);
+            //     std::cout << "Draw: " << e.name() << std::endl;
 
-                mat.shader->setMat4(10, worldTransform);
-                // camera
-                // mat.shader->setMat4(projectionMatrixLoc, m_camera->projectionMatrix());
-                // mat.shader->setMat4(viewMatrixLoc, m_camera->viewMatrix());
-                // mat.shader->setVec3(viewPosLoc, m_camera->position());
-                // it.world().get<Camera>();
+            //     mat.shader->setMat4((GLint) 10, worldTransform); // worldMatrix
+            //     // camera
+            //     mat.shader->setMat4((GLint) 11, glm::mat4(1.0f)); // viewMatrix
+            //     mat.shader->setMat4((GLint) 12, glm::mat4(1.0f)); // projectionMatrix
+            //     mat.shader->setVec3((GLint) 13, glm::vec3(1.0f)); // camPos
+            //     // it.world().get<Camera>();
 
-                glBindVertexArray(mesh.vaoId);
-                glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-            });
+            //     glBindVertexArray(mesh.vaoId);
+            //     glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+            // });
         });
 
     // world.system<UiTag, Transform3d, Material>("RenderUi")
@@ -187,7 +188,6 @@ void Ruby::initPostUpdate() {
 
 void Ruby::start() {
     // ---------- Window
-
     Window window;
     if (window.initialize() != 0) {
         return;
@@ -195,7 +195,6 @@ void Ruby::start() {
     world.set<Window>(window);
 
     // ---------- Systems
-
     world.set_threads(4);
     initDefaultPipeline();
 
@@ -207,24 +206,27 @@ void Ruby::start() {
 
         Transform3d tr1;
         tr1.value = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
-        flecs::entity parent = this->world.entity("parent").add<Material>();
+        flecs::entity parent = this->world.entity("parent");
         parent.set<Transform3d>(tr1);
         parent.set<Mesh>(*cube);
         parent.set<MeshVao>(cubeBuffer);
+        parent.set<Material>(mat);
 
         Transform3d tr2;
         tr2.value = glm::scale(tr1.value, glm::vec3(1.0f));
-        flecs::entity child = this->world.entity("child").child_of(parent).add<Material>();
+        flecs::entity child = this->world.entity("child").child_of(parent);
         child.set<Transform3d>(tr2);
         child.set<Mesh>(*cube);
         child.set<MeshVao>(cubeBuffer);
+        child.set<Material>(mat);
 
         Transform3d tr3;
         tr3.value = glm::translate(tr2.value, glm::vec3(3.0f));
-        flecs::entity grandchild = this->world.entity("grandchild").child_of(child).add<Material>();
+        flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
         grandchild.set<Transform3d>(tr3);
         grandchild.set<Mesh>(*cube);
         grandchild.set<MeshVao>(cubeBuffer);
+        grandchild.set<Material>(mat);
     }
 
     
@@ -234,14 +236,15 @@ void Ruby::start() {
     auto dir = exepath.substr(0, exepath.find_last_of("\\/"));
 
     bool success = true;
-    auto m_mainShader = std::make_unique<Shader>();
-    success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, dir + "/res/base.vert");
-    success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, dir + "/res/base.frag");
-    success &= m_mainShader->link();
+    auto shader = new Shader();
+    success &= shader->addShaderFromSource(GL_VERTEX_SHADER, dir + "/res/base.vert");
+    success &= shader->addShaderFromSource(GL_FRAGMENT_SHADER, dir + "/res/base.frag");
+    success &= shader->link();
     if (!success) {
         std::cerr << "Error when loading main shader\n";
         return;
     }
+    world.set<Shader>(*shader);
 
     // ---------- Engine loop
 

@@ -11,23 +11,23 @@ layout(location=0)in vec4 vPosition;
 layout(location=1)in vec3 vNormal;
 layout(location=2)in vec2 vTexCoord;
 layout(location=3)in vec4 vColor;
-layout(location=4)in vec4 vBoneWeights;
-layout(location=5)in vec4 vBoneIndices;
+// layout(location=4)in vec4 vBoneWeights;
+// layout(location=5)in vec4 vBoneIndices;
 
 // Output for the fragment shader (interpolation)
 out vec3 fNormal;
 out vec3 fPosition;
 out vec2 fTexCoord;
 out vec4 fColor;
-out vec4 fBoneWeights;
-out vec4 fBoneIndices;
+// out vec4 fBoneWeights;
+// out vec4 fBoneIndices;
 
 void main()
 {
 	fTexCoord=vTexCoord;
 	fColor=vColor;
-	fBoneWeights=vBoneWeights;
-	fBoneIndices=vBoneIndices;
+	// fBoneWeights=vBoneWeights;
+	// fBoneIndices=vBoneIndices;
 	
 	// Normal in world space
 	fNormal=transpose(inverse(mat3(worldMatrix)))*-vNormal;

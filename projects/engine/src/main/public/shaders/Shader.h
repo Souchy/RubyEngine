@@ -121,7 +121,7 @@ public:
 
     // ------------------------------------------------------------------------
     // Souchy's uniforms
-    struct BuiltinShaderVertexLocations {
+    static struct BuiltinShaderVertexLocations {
         GLint position = 0;
         GLint normal = 1;
         GLint uv = 2;
@@ -137,7 +137,7 @@ public:
         GLint time = 20;
     } builtinShaderVertexLocations;
 
-    struct BuiltinShaderFragmentLocations {
+    static struct BuiltinShaderFragmentLocations {
         GLint useVertexColor;
         GLint color;
         GLint n;
@@ -145,11 +145,11 @@ public:
         GLint kd;
         GLint ka;
         GLint shadowMapLoc;
-        GLint textureDiffuseLoc = 1;
-        GLint textureNormalLoc = 2;
+        GLint textureDiffuseLoc;
+        GLint textureNormalLoc;
     } builtinShaderFragmentLocations;
 
-    struct BuiltinShaderDebugLocations {
+    static struct BuiltinShaderDebugLocations {
         GLint showUVsLoc;
         GLint showNormalsLoc;
         GLint showShadowsLoc;
