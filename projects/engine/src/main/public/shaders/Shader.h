@@ -122,20 +122,19 @@ public:
     // ------------------------------------------------------------------------
     // Souchy's uniforms
     struct BuiltinShaderVertexLocations {
-        GLint worldMatrix = 0;
-        GLint viewMatrix = 1;
-        GLint projectionMatrix = 2;
-        GLint camPos;
-
         GLint position = 0;
         GLint normal = 1;
         GLint uv = 2;
         GLint color = 3;
+        GLint boneIndices = 4;
+        GLint boneWeights = 5;
 
-        GLint boneIndices;
-        GLint boneWeights;
+        GLint worldMatrix = 10;
+        GLint viewMatrix = 11;
+        GLint projectionMatrix = 12;
+        GLint camPos = 13;
 
-        GLint time = 0;
+        GLint time = 20;
     } builtinShaderVertexLocations;
 
     struct BuiltinShaderFragmentLocations {

@@ -57,24 +57,56 @@ void Ruby::initPreUpdate() {
 }
 
 void Ruby::initOnUpdate() {
-    world.system<Transform3d, Velocity>("Update").kind(flecs::OnUpdate) //
+    // ----- Pipeline
+
+    // ecs_entity_t UpdateLogic = ecs_new_w_id(world, EcsPhase);
+    ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
+    // ecs_entity_t Collisions = ecs_new_w_id(world, EcsPhase);
+    ecs_entity_t RenderingDepth = ecs_new_w_id(world, EcsPhase);
+    ecs_entity_t RenderingColor = ecs_new_w_id(world, EcsPhase);
+    ecs_entity_t RenderingUi = ecs_new_w_id(world, EcsPhase);
+
+    // Phases can (but don't have to) depend on other phases which forces ordering
+    ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
+    // ecs_add_pair(world, Collisions, EcsDependsOn, Physics);
+    ecs_add_pair(world, RenderingDepth, EcsDependsOn, Physics);
+    ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingColor);
+    ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingDepth);
+
+    // ----- Systems
+
+    world.system<Transform3d, Velocity>("UpdateLogic")
+        .kind(flecs::OnUpdate) //
         .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
             auto mat = glm::translate(trans.value, vel.value * it.delta_time());
             trans.value = mat;
         });
 
-    // world.system<Window, Shader>("RenderPass_Depth").kind(flecs::OnUpdate) //
-    //     .run([]() {
-    //         // // 2. then render scene as normal with shadow mapping (using depth map)
-    //         glViewport(0, 0, *m_windowWidth, *m_windowHeight);
-    //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //         glEnable(GL_CULL_FACE);
-    //         glCullFace(GL_BACK);
-    //         // Render objects
-    //         glUseProgram(m_mainShader->programId());
-    //         glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
-    //         // renderNode(root);
-    //     });
+    world.system<Transform3d, Velocity>("UpdatePhysics")
+        .kind(Physics)
+        .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
+            auto mat = glm::translate(trans.value, vel.value * it.delta_time());
+            trans.value = mat;
+        });
+
+    world.system<Window, Shader>("RenderPass_Depth")
+        .kind(RenderingDepth)
+        .term_at(0)
+        .singleton()
+        .each([](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
+            // glViewport(0, 0, 1024, 1024);
+            // glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+            // glEnable(GL_CULL_FACE);
+            // glCullFace(GL_FRONT);
+            // glClear(GL_DEPTH_BUFFER_BIT);
+
+            // glUseProgram(shader.programId());
+
+            // // renderNode(root);
+
+            // glFinish();
+            // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        });
 
     // world.system<MeshVao, Shader>("RenderPass_Sky").kind(flecs::OnUpdate) //
     //     .run([](const MeshVao& vao, const Shader& shader) {
@@ -93,7 +125,7 @@ void Ruby::initOnUpdate() {
     //     });
 
     world.system<Window, Shader>("RenderPass_Color")
-        .kind(flecs::OnUpdate) //
+        .kind(RenderingColor) //
         .term_at(0)
         .singleton()
         .each([](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
@@ -131,14 +163,17 @@ void Ruby::initOnUpdate() {
             });
         });
 
-    // world.system<UiTag, Transform3d, Material>("RenderUi").kind(flecs::OnUpdate) //
+    // world.system<UiTag, Transform3d, Material>("RenderUi")
+    //     .kind(RenderingUi) //
     //     .each([](flecs::iter &it, size_t i, UiTag &ui, const Transform3d &trans, const Material &mat) {
-
     //     });
 }
 
 void Ruby::initPostUpdate() {
-    world.system<Window>("Window").term_at(0).singleton().kind(flecs::PostUpdate) //
+    world.system<Window>("Window")
+        .term_at(0)
+        .singleton()
+        .kind(flecs::PostUpdate)
         .each([](flecs::iter &it, size_t i, Window &w) {
             // Show rendering and get events
             glfwSwapBuffers(w.m_window);
@@ -148,8 +183,16 @@ void Ruby::initPostUpdate() {
 }
 
 void Ruby::start() {
+    // ---------- Window
+
+    Window window;
+    if (window.initialize() != 0) {
+        return;
+    }
+    world.set<Window>(window);
 
     // ---------- Systems
+
     world.set_threads(4);
     initDefaultPipeline();
 
@@ -180,25 +223,18 @@ void Ruby::start() {
     grandchild.set<Mesh>(*cube);
     grandchild.set<MeshVao>(cubeBuffer);
 
-    Window window;
-    if (window.initialize() != 0) {
-        return;
-    }
-    world.set<Window>(window);
-
     // Shader* shader;
     // shader->addShaderFromSource();
 
-    bool success = true;
-    auto m_mainShader = std::make_unique<Shader>();
-    success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, "shaders/basicShader.vert");
-    // success &= m_mainShader->addShaderFromSource(GL_GEOMETRY_SHADER, directory + "shaders/basicShader.geo");
-    success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, "shaders/basicShader.frag");
-    success &= m_mainShader->link();
-    if (!success) {
-        std::cerr << "Error when loading main shader\n";
-        return;
-    }
+    // bool success = true;
+    // auto m_mainShader = std::make_unique<Shader>();
+    // success &= m_mainShader->addShaderFromSource(GL_VERTEX_SHADER, "shaders/basicShader.vert");
+    // success &= m_mainShader->addShaderFromSource(GL_FRAGMENT_SHADER, "shaders/basicShader.frag");
+    // success &= m_mainShader->link();
+    // if (!success) {
+    //     std::cerr << "Error when loading main shader\n";
+    //     return;
+    // }
 
     // ---------- Engine loop
 
