@@ -3,10 +3,6 @@
  */
 
 #include "RubyEngine.h"
-#include <iostream>
-#include <windows.h>
-#include <string>
-#include <libloaderapi.h>
 
 flecs::world Ruby::world;
 flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
@@ -32,11 +28,12 @@ void Ruby::initDefaultPipeline() {
 
                                     mat.shader->setMat4(10, worldTransform); // worldMatrix
                                     // camera
-                                    auto view = it.world().get<CameraView3d>();
-                                    auto pers = it.world().get<CameraPerspective3d>();
-                                    mat.shader->setMat4(11, view->value); // viewMatrix
-                                    mat.shader->setMat4(12, pers->value); // projectionMatrix
-                                    mat.shader->setVec3(13, glm::vec3(10.0f)); // camPos
+                                    // auto view = it.world().get<CameraView3d>();
+                                    // auto pers = it.world().get<CameraPerspective3d>();
+                                    auto cam = it.world().get<Camera3d>();
+                                    mat.shader->setMat4(11, cam->view); // viewMatrix
+                                    mat.shader->setMat4(12, cam->projection); // projectionMatrix
+                                    mat.shader->setVec3(13, cam->pos); // camPos
 
                                     glBindVertexArray(mesh.vaoId);
                                     glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
@@ -178,9 +175,7 @@ void Ruby::start() {
     world.set<Window>(window);
     
     // ---------- Shaders
-    char buffer[255];
-    GetModuleFileName(NULL, buffer, 255);
-    auto exepath = std::string(buffer);
+    auto exepath = Files::getCurrentPath();
     auto dir = exepath.substr(0, exepath.find_last_of("\\/"));
 
     bool success = true;
@@ -230,18 +225,25 @@ void Ruby::start() {
         grandchild.set<MeshVao>(cubeBuffer);
         grandchild.set<Material>(mat);
 
-        CameraView3d view;
-        auto camPos = glm::vec3(10.0f);
         // auto camDir = glm::vec3(0.0f);
+        auto camPos = glm::vec3(10.0f);
         auto camTarget = glm::vec3(0.0f);
         auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-        view.value = glm::lookAt(camPos, camTarget, camUp);
-        world.set<CameraView3d>(view);
-
-        CameraPerspective3d perspective;
         auto fov = glm::radians(45.0f);
-        perspective.value = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
-        world.set<CameraPerspective3d>(perspective);
+
+        // CameraView3d view;
+        // view.value = glm::lookAt(camPos, camTarget, camUp);
+        // world.set<CameraView3d>(view);
+
+        // CameraPerspective3d perspective;
+        // perspective.value = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
+        // world.set<CameraPerspective3d>(perspective);
+        
+        Camera3d cam;
+        cam.pos = camPos;
+        cam.projection = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
+        cam.view = glm::lookAt(camPos, camTarget, camUp);
+        world.set<Camera3d>(cam);
     }
 
 

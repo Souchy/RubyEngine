@@ -11,6 +11,8 @@
 #define RUBYENGINE_EXPORT_FUNC
 #endif
 
+#include <iostream>
+#include <windows.h>
 #include <string>
 #include <flecs.h>
 #include <glm/glm.hpp>
@@ -24,6 +26,7 @@
 #include "resources/Mesh.h"
 #include <util/MeshVao.h>
 #include <util/shapes/Cube.h>
+#include <io/Files.h>
 
 
 namespace RubyEngine {
