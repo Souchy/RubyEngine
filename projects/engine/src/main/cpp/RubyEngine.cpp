@@ -3,250 +3,35 @@
  */
 
 #include "RubyEngine.h"
-#include <iostream>
-#include <windows.h>
-#include <string>
-#include <libloaderapi.h>
 
 flecs::world Ruby::world;
-flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
-flecs::system Ruby::renderMeshSystem;
 
 std::string RubyEngine::Greeter::greeting() {
     return std::string("Hello, World!");
 }
 
-void Ruby::initDefaultPipeline() {
-    Ruby::renderables = world.query_builder<Transform3d, MeshVao, Material>()
-                            .cached()
-                            .query_flags(EcsQueryMatchEmptyTables)
-                            .build();
 
-    Ruby::renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderMesh")
-                                 .kind(0) //
-                                //  .multi_threaded()
-                                 .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                                    auto e = it.entity(i);
-                                    // render cubes
-                                    glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
-
-                                    mat.shader->setMat4(10, worldTransform); // worldMatrix
-                                    // camera
-                                    auto view = it.world().get<CameraView3d>();
-                                    auto pers = it.world().get<CameraPerspective3d>();
-                                    mat.shader->setMat4(11, view->value); // viewMatrix
-                                    mat.shader->setMat4(12, pers->value); // projectionMatrix
-                                    mat.shader->setVec3(13, glm::vec3(10.0f)); // camPos
-
-                                    glBindVertexArray(mesh.vaoId);
-                                    glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-                                });
-    initPreUpdate();
-    initOnUpdate();
-    initPostUpdate();
-}
-
-void Ruby::initPreUpdate() {
-    world.system<Window>("Inputs").term_at(0).singleton().kind(flecs::PreUpdate) //
-        .each([](flecs::iter &it, size_t i, Window &w) {
-            if (glfwGetKey(w.m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                glfwSetWindowShouldClose(w.m_window, true);
-            // if (!m_imGuiActive)
-            // {
-            // 	m_camera.keybordEvents(m_window, delta_time);
-            // }
-        });
-}
-
-void Ruby::initOnUpdate() {
-    // ----- Pipeline
-
-    // ecs_entity_t UpdateLogic = ecs_new_w_id(world, EcsPhase);
-    ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
-    // ecs_entity_t Collisions = ecs_new_w_id(world, EcsPhase);
-    ecs_entity_t RenderingDepth = ecs_new_w_id(world, EcsPhase);
-    ecs_entity_t RenderingColor = ecs_new_w_id(world, EcsPhase);
-    ecs_entity_t RenderingUi = ecs_new_w_id(world, EcsPhase);
-    ecs_entity_t RenderWindow = ecs_new_w_id(world, EcsPhase);
-
-    // Phases can (but don't have to) depend on other phases which forces ordering
-    ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
-    // ecs_add_pair(world, Collisions, EcsDependsOn, Physics);
-    ecs_add_pair(world, RenderingDepth, EcsDependsOn, Physics);
-    ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingDepth);
-    ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingColor);
-    ecs_add_pair(world, RenderWindow, EcsDependsOn, RenderingUi);
-
-    // ----- Systems
-
-    world.system<Transform3d, Velocity>("UpdateLogic")
-        .kind(flecs::OnUpdate) //
-        .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
-            auto mat = glm::translate(trans.value, vel.value * it.delta_time());
-            trans.value = mat;
-        });
-
-    world.system<Transform3d, Velocity>("UpdatePhysics")
-        .kind(Physics)
-        .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
-            auto mat = glm::translate(trans.value, vel.value * it.delta_time());
-            trans.value = mat;
-        });
-
-    world.system<Window, Shader>("RenderPass_Depth")
-        .kind(RenderingDepth)
-        .term_at(0)
-        .singleton()
-        .each([](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
-            // glViewport(0, 0, 1024, 1024);
-            // glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-            // glEnable(GL_CULL_FACE);
-            // glCullFace(GL_FRONT);
-            // glClear(GL_DEPTH_BUFFER_BIT);
-
-            // glUseProgram(shader.programId());
-
-            // // renderNode(root);
-
-            // glFinish();
-            // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        });
-
-    // world.system<MeshVao, Shader>("RenderPass_Sky").kind(flecs::OnUpdate) //
-    //     .run([](const MeshVao& vao, const Shader& shader) {
-    //         glDisable(GL_DEPTH_TEST);
-    //         glBindVertexArray(vao.vaoId);
-    //         //  skycubemap
-    //         glUseProgram(shader.programId());
-    //         // Activez les unités de texture
-    //         shader.setMat3(m_skyShaderUniform.viewMatrixCiel, glm::mat3(m_camera->viewMatrix()));
-    //         shader.setMat4(m_skyShaderUniform.projectionMatrixCiel, m_camera->projectionMatrix());
-    //         // glBindTextureUnit(3, textSky.skyDomeTextureID);
-    //         glBindTextureUnit(3, textSky.jourTextureID);
-    //         glBindTextureUnit(4, textSky.nuitTextureID);
-    //         glDrawElements(GL_TRIANGLES, vao.indexSize, GL_UNSIGNED_INT, 0);
-    //         glEnable(GL_DEPTH_TEST);
-    //     });
-
-    world.system<Window, Shader>("RenderPass_Color")
-        .kind(RenderingColor) //
-        .term_at(0)
-        .singleton()
-        .each([](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
-            // // 2. then render scene as normal with shadow mapping (using depth map)
-            glViewport(0, 0, w.m_windowWidth, w.m_windowHeight);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
-            // Render objects
-            glUseProgram(shader.programId());
-            // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
-            // renderNode(root);
-
-            // Idk if I should use the System or the Query. System is multithreaded.
-
-            Ruby::renderMeshSystem.run();
-        });
-
-    // world.system<UiTag, Transform3d, Material>("RenderUi")
-    //     .kind(RenderingUi) //
-    //     .each([](flecs::iter &it, size_t i, UiTag &ui, const Transform3d &trans, const Material &mat) {
-    //     });
-    
-    world.system<Window>("Window")
-        .term_at(0)
-        .singleton()
-        .kind(RenderWindow)
-        .each([](flecs::iter &it, size_t i, Window &w) {
-            // Show rendering and get events
-            glfwSwapBuffers(w.m_window);
-            // m_imGuiActive = ImGui::IsAnyItemActive();
-            glfwPollEvents();
-        });
-}
-
-void Ruby::initPostUpdate() {
-}
-
-void Ruby::start() {
+void Ruby::init() {
     // ---------- Window
+    Fbo* fbo = new Fbo();
+    fbo->width = 1700;
+    fbo->height = 900;
     Window window;
-    if (window.initialize("Ruby") != 0) {
+    if (window.initialize("Ruby", fbo) != 0) {
         return;
     }
     world.set<Window>(window);
-    
-    // ---------- Shaders
-    char buffer[255];
-    GetModuleFileName(NULL, buffer, 255);
-    auto exepath = std::string(buffer);
-    auto dir = exepath.substr(0, exepath.find_last_of("\\/"));
 
-    bool success = true;
-    auto shader = new Shader();
-    success &= shader->addShaderFromSource(GL_VERTEX_SHADER, dir + "/res/base.vert");
-    success &= shader->addShaderFromSource(GL_FRAGMENT_SHADER, dir + "/res/base.frag");
-    success &= shader->link();
-    if (!success) {
-        std::cerr << "Error when loading main shader\n";
-        return;
-    }
-    world.set<Shader>(*shader);
+    // Init GL properties (?)
+    glPointSize(10.0f);
+    glEnable(GL_DEPTH_TEST);
 
     // ---------- Systems
     world.set_threads(4);
-    initDefaultPipeline();
+}
 
-    // ---------- Entities
-    {
-        Mesh *cube = Cube::generate();
-        MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
-        Material mat;
-        mat.shader = shader;
-
-        Transform3d tr1;
-        tr1.value = glm::mat4(1.0f);
-        flecs::entity parent = this->world.entity("parent");
-        parent.set<Transform3d>(tr1);
-        parent.set<Mesh>(*cube);
-        parent.set<MeshVao>(cubeBuffer);
-        parent.set<Material>(mat);
-
-        Transform3d tr2;
-        tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
-        flecs::entity child = this->world.entity("child").child_of(parent);
-        child.set<Transform3d>(tr2);
-        child.set<Mesh>(*cube);
-        child.set<MeshVao>(cubeBuffer);
-        child.set<Material>(mat);
-
-        Transform3d tr3;
-        tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-        tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
-        flecs::entity grandchild = this->world.entity("grandchild"); //.child_of(child);
-        grandchild.set<Transform3d>(tr3);
-        grandchild.set<Mesh>(*cube);
-        grandchild.set<MeshVao>(cubeBuffer);
-        grandchild.set<Material>(mat);
-
-        CameraView3d view;
-        auto camPos = glm::vec3(10.0f);
-        // auto camDir = glm::vec3(0.0f);
-        auto camTarget = glm::vec3(0.0f);
-        auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-        view.value = glm::lookAt(camPos, camTarget, camUp);
-        world.set<CameraView3d>(view);
-
-        CameraPerspective3d perspective;
-        auto fov = glm::radians(45.0f);
-        perspective.value = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
-        world.set<CameraPerspective3d>(perspective);
-    }
-
-
+void Ruby::start() {
     // ---------- Engine loop
-
     float time = (float)glfwGetTime();
     float delta_time = 1.0f / 60.0f;
     while (world.progress(delta_time)) {
@@ -255,17 +40,8 @@ void Ruby::start() {
         delta_time = new_time - time;
         time = new_time;
     }
-
     // ---------- Cleanup
-    glfwDestroyWindow(window.m_window);
+    glfwDestroyWindow(world.get<Window>()->m_window);
     glfwTerminate();
-}
-
-glm::mat4 Ruby::computeWorldTransform(flecs::entity e) {
-    glm::mat4 mat = e.get<Transform3d>()->value;
-    auto parent = e.parent();
-    if (parent && parent.has<Transform3d>()) {
-        mat *= Ruby::computeWorldTransform(parent);
-    }
-    return mat;
+    ecs_fini(world.c_ptr());
 }

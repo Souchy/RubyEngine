@@ -26,3 +26,9 @@ struct CameraView3d {
 struct CameraPerspective3d {
 	glm::mat4 value;
 };
+
+struct Camera3d {
+	glm::vec3 pos;
+	glm::mat4 view;
+	glm::mat4 projection;
+};
