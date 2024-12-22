@@ -36,7 +36,10 @@ void Ruby::initDefaultPipeline() {
                                     mat.shader->setVec3(13, cam->pos); // camPos
 
                                     glBindVertexArray(mesh.vaoId);
-                                    glDrawElements(GL_TRIANGLES, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+                                    glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+                                    
+                                    // glBindVertexArray(Geometry::gizmoMesh->m_VAOs[Mesh::Torus]);
+                                    // glDrawElements(GL_LINES, (GLsizei)(Geometry::gizmoMesh->m_nbTri * 3), GL_UNSIGNED_INT, nullptr);
                                 });
     initPreUpdate();
     initOnUpdate();
@@ -86,8 +89,7 @@ void Ruby::initOnUpdate() {
     world.system<Transform3d, Velocity>("UpdatePhysics")
         .kind(Physics)
         .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
-            auto mat = glm::translate(trans.value, vel.value * it.delta_time());
-            trans.value = mat;
+            
         });
 
     world.system<Window, Shader>("RenderPass_Depth")
@@ -135,7 +137,9 @@ void Ruby::initOnUpdate() {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glEnable(GL_CULL_FACE);
+            // glCullFace(GL_FRONT);
             glCullFace(GL_BACK);
+
             // Render objects
             glUseProgram(shader.programId());
             // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
@@ -197,8 +201,13 @@ void Ruby::start() {
     {
         Mesh *cube = Cube::generate();
         MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
+        Mesh *gizmo = Gizmo::generate();
+        MeshVao gizmoBuffer = MeshVao::createMeshBuffers(gizmo);
         Material mat;
         mat.shader = shader;
+        Material mat_lines;
+        mat_lines.MODE = GL_LINES;
+        mat_lines.shader = shader;
 
         Transform3d tr1;
         tr1.value = glm::mat4(1.0f);
@@ -207,26 +216,45 @@ void Ruby::start() {
         parent.set<Mesh>(*cube);
         parent.set<MeshVao>(cubeBuffer);
         parent.set<Material>(mat);
+        {
+            Transform3d tr2;
+            tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
+            flecs::entity child = this->world.entity("child").child_of(parent);
+            child.set<Transform3d>(tr2);
+            child.set<Mesh>(*cube);
+            child.set<MeshVao>(cubeBuffer);
+            child.set<Material>(mat);
 
-        Transform3d tr2;
-        tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
-        flecs::entity child = this->world.entity("child").child_of(parent);
-        child.set<Transform3d>(tr2);
-        child.set<Mesh>(*cube);
-        child.set<MeshVao>(cubeBuffer);
-        child.set<Material>(mat);
+            Transform3d tr3;
+            tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+            // tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
+            flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
+            grandchild.set<Transform3d>(tr3);
+            grandchild.set<Mesh>(*cube);
+            grandchild.set<MeshVao>(cubeBuffer);
+            grandchild.set<Material>(mat);
+        }
+        {
+            Transform3d tr2;
+            tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
+            flecs::entity child2 = this->world.entity("child2").child_of(parent);
+            child2.set<Transform3d>(tr2);
+            child2.set<Mesh>(*cube);
+            child2.set<MeshVao>(cubeBuffer);
+            child2.set<Material>(mat);
+            
+            Transform3d tr3;
+            tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+            flecs::entity grandchild2 = this->world.entity("grandchild2").child_of(child2);
+            grandchild2.set<Transform3d>(tr3);
+            grandchild2.set<Mesh>(*gizmo);
+            grandchild2.set<MeshVao>(gizmoBuffer);
+            grandchild2.set<Material>(mat_lines);
+        }
 
-        Transform3d tr3;
-        tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-        tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
-        flecs::entity grandchild = this->world.entity("grandchild"); //.child_of(child);
-        grandchild.set<Transform3d>(tr3);
-        grandchild.set<Mesh>(*cube);
-        grandchild.set<MeshVao>(cubeBuffer);
-        grandchild.set<Material>(mat);
-
+        // Z+ is towards the screen. Z- is away.
         // auto camDir = glm::vec3(0.0f);
-        auto camPos = glm::vec3(10.0f);
+        auto camPos = glm::vec3(0, 5, 10);
         auto camTarget = glm::vec3(0.0f);
         auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
         auto fov = glm::radians(45.0f);

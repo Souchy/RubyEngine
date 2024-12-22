@@ -6,4 +6,5 @@ class Material {
 public:
     Shader *shader;
     // parameters...
+    GLenum MODE = GL_TRIANGLES;
 };

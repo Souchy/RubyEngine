@@ -34,7 +34,7 @@ public:
         glCreateVertexArrays(NumVAOs, &vao.vaoId);
         glCreateBuffers(NumBuffers, vao.m_Buffers);
 
-        // Uploaed + bind + configure
+        // Upload + bind + configure
         createIndexBuffer(mesh->indices, &vao.m_Buffers[Indices], vao.vaoId);
         createVbo3(mesh->positions, &vao.m_Buffers[Position], vao.vaoId, Position);
         createVbo3(mesh->normals, &vao.m_Buffers[Normal], vao.vaoId, Normal);

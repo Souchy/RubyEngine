@@ -26,6 +26,7 @@
 #include "resources/Mesh.h"
 #include <util/MeshVao.h>
 #include <util/shapes/Cube.h>
+#include <util/shapes/Gizmo.h>
 #include <io/Files.h>
 
 

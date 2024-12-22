@@ -18,5 +18,7 @@ out vec4 oColor;
 
 void main()
 {
-	oColor = fColor;
+	// oColor = fColor;
+	// oColor = vec4(fNormal, 1.0);
+	oColor = vec4(fPosition, 1.0);
 }
