@@ -4,12 +4,23 @@ cc_binary(
     name = "editor",
 
     srcs = glob(["editor/src/**/*.cpp"]),
+    # includes = ["editor/src/main/headers"],
+
+    deps = [
+        "//projects:engine",
+        "//projects:editor_lib",
+    ],
+)
+
+cc_library(
+    name = "editor_lib",
+
+    srcs = glob(["editor/src/**/*.cpp"]),
+    hdrs = glob(["editor/src/**/*.h"]),
     includes = ["editor/src/main/headers"],
 
     deps = [
         "//projects:engine",
-        # "//3rdparty:glm",
-        # "@my_library//:flecs"
     ],
 )
 

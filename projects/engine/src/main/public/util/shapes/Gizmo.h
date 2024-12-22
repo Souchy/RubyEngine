@@ -1,3 +1,5 @@
+#pragma once
+
 #include "resources/Mesh.h"
 #include <array>
 #include <iostream>

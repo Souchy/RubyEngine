@@ -5,13 +5,116 @@
 #include <iostream>
 #include <stdlib.h>
 #include <RubyEngine.h>
+#include <App.h>
 
 int main () {
     RubyEngine::Greeter greeter;
     std::cout << greeter.greeting() << "!!!!!!!!" << std::endl;
 
     Ruby ruby;
+    ruby.init();
+
+    App app;
+    app.init(ruby);
+
     ruby.start();
     
     return 0;
+}
+
+void App::init(Ruby ruby) {
+    AppUi ui;
+    ruby.world.set<Ui>((Ui) ui);
+    
+    // ---------- Shaders
+    auto exepath = Files::getCurrentPath();
+    auto dir = exepath.substr(0, exepath.find_last_of("\\/"));
+
+    bool success = true;
+    auto shader = new Shader();
+    success &= shader->addShaderFromSource(GL_VERTEX_SHADER, dir + "/res/base.vert");
+    success &= shader->addShaderFromSource(GL_FRAGMENT_SHADER, dir + "/res/base.frag");
+    success &= shader->link();
+    if (!success) {
+        std::cerr << "Error when loading main shader\n";
+        return;
+    }
+    ruby.world.set<Shader>(*shader);
+
+    // ---------- Entities
+    {
+        Mesh *cube = Cube::generate();
+        MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
+        Mesh *gizmo = Gizmo::generate();
+        MeshVao gizmoBuffer = MeshVao::createMeshBuffers(gizmo);
+        Material mat;
+        mat.shader = shader;
+        Material mat_lines;
+        mat_lines.MODE = GL_LINES;
+        mat_lines.shader = shader;
+
+        Transform3d tr1;
+        tr1.value = glm::mat4(1.0f);
+        flecs::entity parent = ruby.world.entity("parent");
+        parent.set<Transform3d>(tr1);
+        parent.set<Mesh>(*cube);
+        parent.set<MeshVao>(cubeBuffer);
+        parent.set<Material>(mat);
+        {
+            Transform3d tr2;
+            tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
+            flecs::entity child = ruby.world.entity("child").child_of(parent);
+            child.set<Transform3d>(tr2);
+            child.set<Mesh>(*cube);
+            child.set<MeshVao>(cubeBuffer);
+            child.set<Material>(mat);
+
+            Transform3d tr3;
+            tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+            // tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
+            flecs::entity grandchild = ruby.world.entity("grandchild").child_of(child);
+            grandchild.set<Transform3d>(tr3);
+            grandchild.set<Mesh>(*cube);
+            grandchild.set<MeshVao>(cubeBuffer);
+            grandchild.set<Material>(mat);
+        }
+        {
+            Transform3d tr2;
+            tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
+            flecs::entity child2 = ruby.world.entity("child2").child_of(parent);
+            child2.set<Transform3d>(tr2);
+            child2.set<Mesh>(*cube);
+            child2.set<MeshVao>(cubeBuffer);
+            child2.set<Material>(mat);
+            
+            Transform3d tr3;
+            tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+            flecs::entity grandchild2 = ruby.world.entity("grandchild2").child_of(child2);
+            grandchild2.set<Transform3d>(tr3);
+            grandchild2.set<Mesh>(*gizmo);
+            grandchild2.set<MeshVao>(gizmoBuffer);
+            grandchild2.set<Material>(mat_lines);
+        }
+
+        // Z+ is towards the screen. Z- is away.
+        // auto camDir = glm::vec3(0.0f);
+        auto camPos = glm::vec3(0, 5, 10);
+        auto camTarget = glm::vec3(0.0f);
+        auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        auto fov = glm::radians(45.0f);
+
+        // CameraView3d view;
+        // view.value = glm::lookAt(camPos, camTarget, camUp);
+        // world.set<CameraView3d>(view);
+
+        // CameraPerspective3d perspective;
+        // perspective.value = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
+        // world.set<CameraPerspective3d>(perspective);
+        
+        Camera3d cam;
+        cam.pos = camPos;
+        cam.projection = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
+        cam.view = glm::lookAt(camPos, camTarget, camUp);
+        ruby.world.set<Camera3d>(cam);
+    }
 }

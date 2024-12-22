@@ -20,27 +20,27 @@ void Ruby::initDefaultPipeline() {
 
     Ruby::renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderMesh")
                                  .kind(0) //
-                                //  .multi_threaded()
+                                          //  .multi_threaded()
                                  .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                                    auto e = it.entity(i);
-                                    // render cubes
-                                    glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
+                                     auto e = it.entity(i);
+                                     // render cubes
+                                     glm::mat4 worldTransform = Ruby::computeWorldTransform(e);
 
-                                    mat.shader->setMat4(10, worldTransform); // worldMatrix
-                                    // camera
-                                    // auto view = it.world().get<CameraView3d>();
-                                    // auto pers = it.world().get<CameraPerspective3d>();
-                                    auto cam = it.world().get<Camera3d>();
-                                    mat.shader->setMat4(11, cam->view); // viewMatrix
-                                    mat.shader->setMat4(12, cam->projection); // projectionMatrix
-                                    mat.shader->setVec3(13, cam->pos); // camPos
+                                     mat.shader->setMat4(10, worldTransform); // worldMatrix
+                                     // camera
+                                     // auto view = it.world().get<CameraView3d>();
+                                     // auto pers = it.world().get<CameraPerspective3d>();
+                                     auto cam = it.world().get<Camera3d>();
+                                     mat.shader->setMat4(11, cam->view);       // viewMatrix
+                                     mat.shader->setMat4(12, cam->projection); // projectionMatrix
+                                     mat.shader->setVec3(13, cam->pos);        // camPos
 
-                                    glBindVertexArray(mesh.vaoId);
-                                    glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-                                    
-                                    // glBindVertexArray(Geometry::gizmoMesh->m_VAOs[Mesh::Torus]);
-                                    // glDrawElements(GL_LINES, (GLsizei)(Geometry::gizmoMesh->m_nbTri * 3), GL_UNSIGNED_INT, nullptr);
-                                });
+                                     glBindVertexArray(mesh.vaoId);
+                                     glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+
+                                     // glBindVertexArray(Geometry::gizmoMesh->m_VAOs[Mesh::Torus]);
+                                     // glDrawElements(GL_LINES, (GLsizei)(Geometry::gizmoMesh->m_nbTri * 3), GL_UNSIGNED_INT, nullptr);
+                                 });
     initPreUpdate();
     initOnUpdate();
     initPostUpdate();
@@ -89,7 +89,7 @@ void Ruby::initOnUpdate() {
     world.system<Transform3d, Velocity>("UpdatePhysics")
         .kind(Physics)
         .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
-            
+
         });
 
     world.system<Window, Shader>("RenderPass_Depth")
@@ -150,16 +150,37 @@ void Ruby::initOnUpdate() {
             Ruby::renderMeshSystem.run();
         });
 
-    // world.system<UiTag, Transform3d, Material>("RenderUi")
+    world.system<Window, Ui>("RenderUi_Imgui")
+        .kind(RenderingUi) //
+        .term_at(0)
+        .singleton()
+        .each([](flecs::iter &it, size_t i, const Window &w, Ui &ui) {
+            // Select root node by default
+            // if (getSelectedNode() == nullptr)
+            //     setSelectedNode(root);
+
+            // Start the Dear ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            ui.draw();
+            // this->renderHierarchy(root);
+            // this->renderNodeProperties(root);
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        });
+    // world.system<UiTag, Transform3d, Material>("RenderUi_Controls")
     //     .kind(RenderingUi) //
     //     .each([](flecs::iter &it, size_t i, UiTag &ui, const Transform3d &trans, const Material &mat) {
     //     });
-    
+
     world.system<Window>("Window")
         .term_at(0)
         .singleton()
         .kind(RenderWindow)
-        .each([](flecs::iter &it, size_t i, Window &w) {
+        .each([](flecs::iter &it, size_t i, const Window &w) {
             // Show rendering and get events
             glfwSwapBuffers(w.m_window);
             // m_imGuiActive = ImGui::IsAnyItemActive();
@@ -170,113 +191,25 @@ void Ruby::initOnUpdate() {
 void Ruby::initPostUpdate() {
 }
 
-void Ruby::start() {
+void Ruby::init() {
     // ---------- Window
     Window window;
     if (window.initialize("Ruby") != 0) {
         return;
     }
     world.set<Window>(window);
-    
-    // ---------- Shaders
-    auto exepath = Files::getCurrentPath();
-    auto dir = exepath.substr(0, exepath.find_last_of("\\/"));
 
-    bool success = true;
-    auto shader = new Shader();
-    success &= shader->addShaderFromSource(GL_VERTEX_SHADER, dir + "/res/base.vert");
-    success &= shader->addShaderFromSource(GL_FRAGMENT_SHADER, dir + "/res/base.frag");
-    success &= shader->link();
-    if (!success) {
-        std::cerr << "Error when loading main shader\n";
-        return;
-    }
-    world.set<Shader>(*shader);
+    // Init GL properties (?)
+    glPointSize(10.0f);
+    glEnable(GL_DEPTH_TEST);
 
     // ---------- Systems
     world.set_threads(4);
     initDefaultPipeline();
+}
 
-    // ---------- Entities
-    {
-        Mesh *cube = Cube::generate();
-        MeshVao cubeBuffer = MeshVao::createMeshBuffers(cube);
-        Mesh *gizmo = Gizmo::generate();
-        MeshVao gizmoBuffer = MeshVao::createMeshBuffers(gizmo);
-        Material mat;
-        mat.shader = shader;
-        Material mat_lines;
-        mat_lines.MODE = GL_LINES;
-        mat_lines.shader = shader;
-
-        Transform3d tr1;
-        tr1.value = glm::mat4(1.0f);
-        flecs::entity parent = this->world.entity("parent");
-        parent.set<Transform3d>(tr1);
-        parent.set<Mesh>(*cube);
-        parent.set<MeshVao>(cubeBuffer);
-        parent.set<Material>(mat);
-        {
-            Transform3d tr2;
-            tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
-            flecs::entity child = this->world.entity("child").child_of(parent);
-            child.set<Transform3d>(tr2);
-            child.set<Mesh>(*cube);
-            child.set<MeshVao>(cubeBuffer);
-            child.set<Material>(mat);
-
-            Transform3d tr3;
-            tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
-            // tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
-            flecs::entity grandchild = this->world.entity("grandchild").child_of(child);
-            grandchild.set<Transform3d>(tr3);
-            grandchild.set<Mesh>(*cube);
-            grandchild.set<MeshVao>(cubeBuffer);
-            grandchild.set<Material>(mat);
-        }
-        {
-            Transform3d tr2;
-            tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
-            flecs::entity child2 = this->world.entity("child2").child_of(parent);
-            child2.set<Transform3d>(tr2);
-            child2.set<Mesh>(*cube);
-            child2.set<MeshVao>(cubeBuffer);
-            child2.set<Material>(mat);
-            
-            Transform3d tr3;
-            tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
-            flecs::entity grandchild2 = this->world.entity("grandchild2").child_of(child2);
-            grandchild2.set<Transform3d>(tr3);
-            grandchild2.set<Mesh>(*gizmo);
-            grandchild2.set<MeshVao>(gizmoBuffer);
-            grandchild2.set<Material>(mat_lines);
-        }
-
-        // Z+ is towards the screen. Z- is away.
-        // auto camDir = glm::vec3(0.0f);
-        auto camPos = glm::vec3(0, 5, 10);
-        auto camTarget = glm::vec3(0.0f);
-        auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-        auto fov = glm::radians(45.0f);
-
-        // CameraView3d view;
-        // view.value = glm::lookAt(camPos, camTarget, camUp);
-        // world.set<CameraView3d>(view);
-
-        // CameraPerspective3d perspective;
-        // perspective.value = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
-        // world.set<CameraPerspective3d>(perspective);
-        
-        Camera3d cam;
-        cam.pos = camPos;
-        cam.projection = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
-        cam.view = glm::lookAt(camPos, camTarget, camUp);
-        world.set<Camera3d>(cam);
-    }
-
-
+void Ruby::start() {
     // ---------- Engine loop
-
     float time = (float)glfwGetTime();
     float delta_time = 1.0f / 60.0f;
     while (world.progress(delta_time)) {
@@ -285,9 +218,8 @@ void Ruby::start() {
         delta_time = new_time - time;
         time = new_time;
     }
-
     // ---------- Cleanup
-    glfwDestroyWindow(window.m_window);
+    glfwDestroyWindow(world.get<Window>()->m_window);
     glfwTerminate();
 }
 
