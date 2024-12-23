@@ -164,7 +164,8 @@ void Ruby::initOnUpdate() {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            ui.draw();
+            flecs::entity root = it.world().lookup("root");
+            ui.draw(root);
             // this->renderHierarchy(root);
             // this->renderNodeProperties(root);
 
