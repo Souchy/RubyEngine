@@ -132,6 +132,8 @@ void Ruby::initOnUpdate() {
         .term_at(0)
         .singleton()
         .each([](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
+            // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
             // // 2. then render scene as normal with shadow mapping (using depth map)
             glViewport(0, 0, w.m_windowWidth, w.m_windowHeight);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -144,10 +146,10 @@ void Ruby::initOnUpdate() {
             glUseProgram(shader.programId());
             // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
             // renderNode(root);
-
             // Idk if I should use the System or the Query. System is multithreaded.
-
             Ruby::renderMeshSystem.run();
+            
+            // glBindFramebuffer(GL_FRAMEBUFFER, 0);
         });
 
     world.system<Window, std::shared_ptr<Ui>>("RenderUi_Imgui")

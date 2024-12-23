@@ -8,7 +8,7 @@ public:
     virtual ~Ui() = default;                   // Virtual destructor
     virtual void draw(flecs::entity root) = 0; // Pure virtual
 
-    void drawTree(flecs::entity entity, int depth = 0) {
+    virtual void drawTree(flecs::entity entity, int depth = 0) {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
 
         ImGui::PushID(entity.id());
@@ -34,7 +34,7 @@ public:
         }
         ImGui::PopID();
     }
-    void drawProperties(flecs::entity entity) {
+    virtual void drawProperties(flecs::entity entity) {
         if (!entity) {
             return;
         }
@@ -51,5 +51,8 @@ public:
         //         // You can add more detailed component-specific rendering here
         //     }
         // });
+    }
+    virtual void drawScene() {
+
     }
 };
