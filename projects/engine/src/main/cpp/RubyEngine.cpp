@@ -150,11 +150,11 @@ void Ruby::initOnUpdate() {
             Ruby::renderMeshSystem.run();
         });
 
-    world.system<Window, Ui>("RenderUi_Imgui")
+    world.system<Window, std::shared_ptr<Ui>>("RenderUi_Imgui")
         .kind(RenderingUi) //
         .term_at(0)
         .singleton()
-        .each([](flecs::iter &it, size_t i, const Window &w, Ui &ui) {
+        .each([](flecs::iter &it, size_t i, const Window &w, std::shared_ptr<Ui> ui) {
             // Select root node by default
             // if (getSelectedNode() == nullptr)
             //     setSelectedNode(root);
@@ -165,7 +165,7 @@ void Ruby::initOnUpdate() {
             ImGui::NewFrame();
 
             flecs::entity root = it.world().lookup("root");
-            ui.draw(root);
+            ui->draw(root);
             // this->renderHierarchy(root);
             // this->renderNodeProperties(root);
 

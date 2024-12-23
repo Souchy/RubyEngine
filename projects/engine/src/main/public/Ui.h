@@ -2,43 +2,40 @@
 
 #include "components/3d/Components3d.h"
 
-class Ui
-{
+class Ui {
 public:
     flecs::entity selected;
-    virtual void draw(flecs::entity root)
-    {
-        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetStyle().IndentSpacing * 0.5f); // Set smaller indent
-        ImGui::Begin("Hierarchy");
-        drawTree(root);
-        ImGui::End();
+    virtual ~Ui() = default;                   // Virtual destructor
+    virtual void draw(flecs::entity root) = 0; // Pure virtual
 
-        ImGui::Begin("Properties");
-        drawProperties(selected);
-        ImGui::End();
-        ImGui::PopStyleVar(); // Restore indent
-    }
-
-    void drawTree(flecs::entity entity)
-    {
-
+    void drawTree(flecs::entity entity, int depth = 0) {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
-        if (ImGui::TreeNodeEx(entity.name().c_str(), flags))
-        {
-            // entity.children(&drawTree);
-            if (ImGui::IsItemClicked())
-            {
-                selected = entity;
-            }
-            entity.children([this](flecs::entity child)
-                            { drawTree(child); });
+
+        ImGui::PushID(entity.id());
+        bool open = ImGui::TreeNodeEx(entity.name().c_str(), flags);
+        // Selection
+        if (ImGui::IsItemClicked()) {
+            selected = entity;
+        }
+        // Draw vertical lines
+        if (depth > 0) {
+            ImDrawList *draw_list = ImGui::GetWindowDrawList();
+            ImVec2 pos = ImGui::GetCursorScreenPos();
+            float line_height = ImGui::GetTextLineHeight();
+            float line_x = pos.x;
+            float line_y1 = pos.y - line_height - 2;
+            float line_y2 = line_y1 + line_height;
+            draw_list->AddLine(ImVec2(line_x, line_y1), ImVec2(line_x, line_y2), IM_COL32(200, 200, 200, 255));
+        }
+        // Children
+        if (open) {
+            entity.children([this, depth](flecs::entity child) { drawTree(child, depth + 1); });
             ImGui::TreePop();
         }
+        ImGui::PopID();
     }
-    void drawProperties(flecs::entity entity)
-    {
-        if (!entity)
-        {
+    void drawProperties(flecs::entity entity) {
+        if (!entity) {
             return;
         }
         ImGui::Text("Name: %s", entity.name().c_str());

@@ -25,8 +25,8 @@ int main()
 
 void App::init(Ruby ruby)
 {
-    AppUi ui;
-    ruby.world.set<Ui>((Ui)ui);
+    std::shared_ptr<Ui> ui = std::make_shared<AppUi>();
+    ruby.world.set<std::shared_ptr<Ui>>(ui);
 
     // ---------- Shaders
     auto exepath = Files::getCurrentPath();
