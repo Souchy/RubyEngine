@@ -2,7 +2,9 @@
 
 #include <Window.h>
 
-int Window::initialize(const char *title) {
+int Window::initialize(const char *title, Fbo* fbo) {
+    this->fbo = fbo;
+
     // OpenGL version (usefull for imGUI and other libraries)
     const char *glsl_version = "#version 460 core";
 
@@ -25,7 +27,7 @@ int Window::initialize(const char *title) {
 
     // glfw window creation
     // --------------------
-    m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, title, nullptr, nullptr);
+    m_window = glfwCreateWindow(fbo->width, fbo->height, title, nullptr, nullptr);
     if (m_window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -100,8 +102,8 @@ void Window::InitializeCallback() {
 }
 
 void Window::FramebufferSizeCallback(int width, int height) {
-    m_windowWidth = width;
-    m_windowHeight = height;
+    fbo->width = width;
+    fbo->height = height;
     glViewport(0, 0, width, height);
     // m_camera.viewportEvents(width, height);
 }

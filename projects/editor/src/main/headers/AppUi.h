@@ -3,10 +3,10 @@
 #include <Ui.h>
 #include <flecs.h>
 #include <imgui.h>
+#include <Window.h>
 
 class AppUi : public Ui {
 public:
-    // void draw() override;
     void draw(flecs::entity root) override {
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetStyle().IndentSpacing * 0.5f); // Set smaller indent
 
@@ -19,12 +19,14 @@ public:
         ImGui::End();
 
         ImGui::Begin("Scene");
-        drawScene();
+        auto w = root.world().get<Window>();
+        drawScene(w->fbo);
         ImGui::End();
 
         ImGui::PopStyleVar(); // Restore indent
     }
-    void drawScene() override {
-        // ImGui::Image((void *)(intptr_t)texture, ImVec2(800, 600));
+
+    void drawScene(const Fbo *fbo) override {
+        ImGui::Image(fbo->texture, ImVec2(fbo->width, fbo->height));
     }
 };

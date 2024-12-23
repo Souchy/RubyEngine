@@ -1,12 +1,15 @@
 #pragma once
 
 #include "components/3d/Components3d.h"
+#include "components/Components.h"
 
 class Ui {
 public:
     flecs::entity selected;
+    
     virtual ~Ui() = default;                   // Virtual destructor
-    virtual void draw(flecs::entity root) = 0; // Pure virtual
+
+    virtual void draw(flecs::entity root) = 0;
 
     virtual void drawTree(flecs::entity entity, int depth = 0) {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth;
@@ -34,6 +37,7 @@ public:
         }
         ImGui::PopID();
     }
+
     virtual void drawProperties(flecs::entity entity) {
         if (!entity) {
             return;
@@ -52,7 +56,7 @@ public:
         //     }
         // });
     }
-    virtual void drawScene() {
 
+    virtual void drawScene(const Fbo *fbo) {
     }
 };
