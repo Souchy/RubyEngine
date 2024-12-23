@@ -50,7 +50,7 @@ public:
                 // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
                 // renderNode(root);
                 // Idk if I should use the System or the Query. System is multithreaded.
-                renderMeshSystem.run();
+                this->renderMeshSystem.run();
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             });

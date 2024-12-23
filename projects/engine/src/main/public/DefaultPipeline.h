@@ -48,10 +48,11 @@ public:
         ecs_add_pair(world, RenderWindow, EcsDependsOn, RenderingUi);
 
         // ----- Systems
+        systemRenderMesh(world);
+
         systemInputs(world, flecs::PreUpdate);
         systemUpdateLogic(world, flecs::OnUpdate);
         systemUpdatePhysic(world, Physics);
-        systemRenderMesh(world);
         systemRenderDepth(world, RenderingDepth);
         systemRenderColor(world, RenderingColor);
         systemRenderUi(world, RenderingUi);
@@ -145,40 +146,58 @@ public:
                 // Render objects
                 glUseProgram(shader.programId());
                 // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
-                // renderNode(root);
+
                 // Idk if I should use the System or the Query. System is multithreaded.
-                // renderMeshSystem.run();
+                // renderNode(root);
+                // this->renderMeshSystem.run();
+                this->renderables
+                    .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+                        auto e = it.entity(i);
+                        // render cubes
+                        glm::mat4 worldTransform = Math::computeWorldTransform(e);
+
+                        mat.shader->setMat4(10, worldTransform); // worldMatrix
+                        // camera
+                        // auto view = it.world().get<CameraView3d>();
+                        // auto pers = it.world().get<CameraPerspective3d>();
+                        auto cam = it.world().get<Camera3d>();
+                        mat.shader->setMat4(11, cam->view);       // viewMatrix
+                        mat.shader->setMat4(12, cam->projection); // projectionMatrix
+                        mat.shader->setVec3(13, cam->pos);        // camPos
+
+                        glBindVertexArray(mesh.vaoId);
+                        glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+                    });
 
                 // glBindFramebuffer(GL_FRAMEBUFFER, 0);
             });
     }
 
     virtual void systemRenderMesh(flecs::world &world) override {
+        this->renderables = world.query_builder<Transform3d, MeshVao, Material>()
+                                .cached()
+                                .query_flags(EcsQueryMatchEmptyTables)
+                                .build();
+        this->renderMeshSystem = world
+                                     .system<Transform3d, MeshVao, Material>("RenderMesh")
+                                     .kind(0) // //  .multi_threaded()
+                                     .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+                                         auto e = it.entity(i);
+                                         // render cubes
+                                         glm::mat4 worldTransform = Math::computeWorldTransform(e);
 
-        renderables = world.query_builder<Transform3d, MeshVao, Material>()
-                          .cached()
-                          .query_flags(EcsQueryMatchEmptyTables)
-                          .build();
-        renderMeshSystem = world
-                               .system<Transform3d, MeshVao, Material>("RenderMesh")
-                               .kind(0) // //  .multi_threaded()
-                               .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                                   auto e = it.entity(i);
-                                   // render cubes
-                                   glm::mat4 worldTransform = Math::computeWorldTransform(e);
+                                         mat.shader->setMat4(10, worldTransform); // worldMatrix
+                                         // camera
+                                         // auto view = it.world().get<CameraView3d>();
+                                         // auto pers = it.world().get<CameraPerspective3d>();
+                                         auto cam = it.world().get<Camera3d>();
+                                         mat.shader->setMat4(11, cam->view);       // viewMatrix
+                                         mat.shader->setMat4(12, cam->projection); // projectionMatrix
+                                         mat.shader->setVec3(13, cam->pos);        // camPos
 
-                                   mat.shader->setMat4(10, worldTransform); // worldMatrix
-                                   // camera
-                                   // auto view = it.world().get<CameraView3d>();
-                                   // auto pers = it.world().get<CameraPerspective3d>();
-                                   auto cam = it.world().get<Camera3d>();
-                                   mat.shader->setMat4(11, cam->view);       // viewMatrix
-                                   mat.shader->setMat4(12, cam->projection); // projectionMatrix
-                                   mat.shader->setVec3(13, cam->pos);        // camPos
-
-                                   glBindVertexArray(mesh.vaoId);
-                                   glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-                               });
+                                         glBindVertexArray(mesh.vaoId);
+                                         glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+                                     });
     }
 
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) override {

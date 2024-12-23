@@ -28,8 +28,8 @@ void App::init(Ruby ruby)
 
     // ---------- Pipeline
 
-    EditorPipeline pipeline;
-    // DefaultPipeline pipeline;
+    // EditorPipeline pipeline;
+    DefaultPipeline pipeline;
     pipeline.init(ruby.world);
 
     // ---------- UI
