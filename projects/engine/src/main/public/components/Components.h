@@ -33,7 +33,6 @@ public:
     GLsizei height;
 	bool aspectFixed;
 	float aspect;
-    glm::vec4 clearColor;
 	// Transform3d transform;
     virtual void resize(int width, int height) = 0;
 };

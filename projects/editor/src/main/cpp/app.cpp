@@ -75,7 +75,6 @@ void App::init(Ruby *ruby) {
         vp->yPercentOfHeight = 0.0f;
         vp->widthPercentOfWidth = 0.5f;
         vp->heightPercentOfHeight = 1.0f;
-        vp->clearColor = glm::vec4(0.2f, 0.0f, 0.1f, 1.0f);
         vp->resize(ws.width, ws.height);
 
         // View world
@@ -86,6 +85,15 @@ void App::init(Ruby *ruby) {
                                 .build();
         // Entity View = Camera + Viewport
         ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<WorldQuery>(query);
+        
+        // Viewport 2
+        std::shared_ptr<PercentViewport> vp2 = std::make_shared<PercentViewport>();
+        vp2->xPercentOfWidth = 0.0f;
+        vp2->yPercentOfHeight = 0.0f;
+        vp2->widthPercentOfWidth = 0.5f;
+        vp2->heightPercentOfHeight = 1.0f;
+        vp2->resize(ws.width, ws.height);
+        ruby->world.entity("view2").set<std::shared_ptr<Viewport>>(vp2).set<Camera3d>(cam).set<WorldQuery>(query);
     }
 
     // ---------- Pipeline

@@ -112,18 +112,25 @@ public:
     }
 
     virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
-        world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("RenderPass_Color")
+        // Window
+        world.system<std::shared_ptr<Window>>("Clear Window")
+            .kind(phase) //
+            .term_at(0)
+            .singleton()
+            .each([](const std::shared_ptr<Window> &w) {
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                // glm::vec4 clearColor;
+                // glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_BACK);
+            });
+        // Viewport
+        world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("Render_Viewport")
             .kind(phase) //
             .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
                 auto shader = it.world().get<Shader>();
 
                 glViewport(vp->x, vp->y, vp->width, vp->height);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
-
-                glEnable(GL_CULL_FACE);
-                glCullFace(GL_BACK);
-
                 glUseProgram(shader->programId());
 
                 // Render all entities with the view camera
