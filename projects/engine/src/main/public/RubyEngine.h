@@ -48,11 +48,6 @@ public:
     std::shared_ptr<Pipeline> pipeline;
 
     void init();
-    void bla(flecs::world &world);
-    void initDefaultPipeline();
-    void initPreUpdate();
-    void initOnUpdate();
-    void initPostUpdate();
     void start();
 };
 

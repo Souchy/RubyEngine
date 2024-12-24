@@ -13,32 +13,6 @@ std::string RubyEngine::Greeter::greeting() {
     return std::string("Hello, World!");
 }
 
-void Ruby::initDefaultPipeline() {
-
-    // EditorPipeline pipeline;
-    // DefaultPipeline pipeline;
-    // BsPipeline pipeline;
-    // pipeline.init(this->world);
-    
-    this->pipeline = std::make_shared<DefaultPipeline>();
-    this->pipeline->init(this->world);
-
-    bla(this->world);
-}
-
-void Ruby::bla(flecs::world &world) {
-    
-}
-
-void Ruby::initPreUpdate() {
-}
-
-void Ruby::initOnUpdate() {
-}
-
-void Ruby::initPostUpdate() {
-}
-
 void Ruby::init() {
     // ---------- Window
     Fbo *fbo = new Fbo();
@@ -56,7 +30,8 @@ void Ruby::init() {
 
     // ---------- Systems
     world.set_threads(4);
-    initDefaultPipeline();
+    this->pipeline = std::make_shared<DefaultPipeline>();
+    this->pipeline->init(this->world);
 }
 
 void Ruby::start() {
