@@ -43,7 +43,6 @@ public:
 
         // ----- Systems
         systemRenderMesh(world);
-
         {
             // Only once instance
             systemInputs(world, flecs::PreUpdate);
