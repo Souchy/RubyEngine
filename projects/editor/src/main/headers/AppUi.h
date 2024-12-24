@@ -20,7 +20,7 @@ public:
 
         ImGui::Begin("Scene");
         auto w = root.world().get<Window>();
-        drawScene(w->fbo);
+        // drawScene(w->fbo);
         ImGui::End();
 
         ImGui::Begin("Filesystem");
@@ -31,7 +31,7 @@ public:
     }
 
     void drawScene(const Fbo *fbo) override {
-        ImGui::Image(fbo->texture, ImVec2(fbo->width, fbo->height));
+        // ImGui::Image(fbo->texture, ImVec2(fbo->width, fbo->height));
     }
     
     void drawFilesystem() override {

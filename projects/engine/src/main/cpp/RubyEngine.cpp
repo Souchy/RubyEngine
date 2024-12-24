@@ -14,38 +14,23 @@ std::string RubyEngine::Greeter::greeting() {
 }
 
 void Ruby::init() {
-    // ---------- Window
-    Fbo *fbo = new Fbo();
-    fbo->width = 1700;
-    fbo->height = 900;
-    Window window;
-    if (window.initialize("Ruby", fbo) != 0) {
-        return;
-    }
-    world.set<Window>(window);
-
-    // Init GL properties (?)
-    glPointSize(10.0f);
-    glEnable(GL_DEPTH_TEST);
-
     // ---------- Systems
     world.set_threads(4);
-    this->pipeline = std::make_shared<DefaultPipeline>();
-    this->pipeline->init(this->world);
 }
 
 void Ruby::start() {
+    auto w = *world.get<std::shared_ptr<Window>>();
     // ---------- Engine loop
     float time = (float)glfwGetTime();
     float delta_time = 1.0f / 60.0f;
-    while (world.progress(delta_time)) {
+    while (!glfwWindowShouldClose(w->m_window) && world.progress(delta_time)) {
         // Compute delta time between two frames
         float new_time = (float)glfwGetTime();
         delta_time = new_time - time;
         time = new_time;
     }
     // ---------- Cleanup
-    glfwDestroyWindow(world.get<Window>()->m_window);
+    glfwDestroyWindow(w->m_window);
     glfwTerminate();
     ecs_fini(world.c_ptr());
 }

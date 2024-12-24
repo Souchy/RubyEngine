@@ -2,9 +2,7 @@
 
 #include <Window.h>
 
-int Window::initialize(const char *title, Fbo* fbo) {
-    this->fbo = fbo;
-
+int Window::initialize(const char *title, WindowSize ws) {
     // OpenGL version (usefull for imGUI and other libraries)
     const char *glsl_version = "#version 460 core";
 
@@ -27,7 +25,7 @@ int Window::initialize(const char *title, Fbo* fbo) {
 
     // glfw window creation
     // --------------------
-    m_window = glfwCreateWindow(fbo->width, fbo->height, title, nullptr, nullptr);
+    m_window = glfwCreateWindow(ws.width, ws.height, title, nullptr, nullptr);
     if (m_window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -82,6 +80,10 @@ int Window::initialize(const char *title, Fbo* fbo) {
     // Other openGL initialization
     // -----------------------------
     // return InitializeGL();
+    
+    // Init GL properties (?)
+    glPointSize(10.0f);
+    glEnable(GL_DEPTH_TEST);
     return 0;
 }
 
@@ -102,9 +104,19 @@ void Window::InitializeCallback() {
 }
 
 void Window::FramebufferSizeCallback(int width, int height) {
-    fbo->width = width;
-    fbo->height = height;
-    glViewport(fbo->x, fbo->y, width, height);
+    // ws->width = width;
+    // ws->height = height;
+
+    if(onResize) {
+        onResize(width, height);
+    } else {
+        printf("Resize callback not set\n");
+    }
+    // fbo->y = 0;
+    // fbo->x = width / 2;
+    // fbo->width = width / 2;
+    // fbo->height = height;
+    // glViewport(fbo->x, fbo->y, fbo->width, fbo->height);
     // m_camera.viewportEvents(width, height);
 }
 

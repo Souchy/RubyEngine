@@ -45,7 +45,7 @@ public:
     flecs::world world;
     // flecs::query<Transform3d, MeshVao, Material> renderables;
     // flecs::system renderMeshSystem;
-    std::shared_ptr<Pipeline> pipeline;
+    std::shared_ptr<Pipeline> pipeline = nullptr;
 
     void init();
     void start();

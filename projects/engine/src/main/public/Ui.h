@@ -2,6 +2,8 @@
 
 #include "components/3d/Components3d.h"
 #include "components/Components.h"
+#include <flecs.h>
+#include <imgui.h>
 
 class Ui {
 public:

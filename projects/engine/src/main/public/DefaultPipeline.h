@@ -24,7 +24,6 @@ public:
 class DefaultPipeline : public Pipeline {
 public:
     flecs::query<Transform3d, MeshVao, Material> renderables;
-    flecs::system renderMeshSystem;
 
     virtual void init(flecs::world &world) override {
         // ----- Pipeline
@@ -63,13 +62,13 @@ public:
     }
 
     virtual void systemInputs(flecs::world &world, flecs::entity_t phase) override {
-        world.system<Window>("Inputs")
+        world.system<std::shared_ptr<Window>>("Inputs")
             .term_at(0)
             .singleton()
             .kind(phase) //
-            .each([](flecs::iter &it, size_t i, Window &w) {
-                if (glfwGetKey(w.m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                    glfwSetWindowShouldClose(w.m_window, true);
+            .each([](flecs::iter &it, size_t i, std::shared_ptr<Window> &w) {
+                if (glfwGetKey(w->m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                    glfwSetWindowShouldClose(w->m_window, true);
                 // if (!m_imGuiActive)
                 // {
                 // 	m_camera.keybordEvents(m_window, delta_time);
@@ -94,11 +93,11 @@ public:
     }
 
     virtual void systemRenderDepth(flecs::world &world, flecs::entity_t phase) override {
-        world.system<Window, Shader>("RenderPass_Depth")
+        world.system<std::shared_ptr<Window>, Shader>("RenderPass_Depth")
             .kind(phase)
             .term_at(0)
             .singleton()
-            .each([](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
+            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w, const Shader &shader) {
                 // glViewport(0, 0, 1024, 1024);
                 // glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
                 // glEnable(GL_CULL_FACE);
@@ -116,63 +115,35 @@ public:
     }
 
     virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
-        // world.system<MeshVao, Shader>("RenderPass_Sky").kind(phase) //
-        //     .run([](const MeshVao& vao, const Shader& shader) {
-        //         glDisable(GL_DEPTH_TEST);
-        //         glBindVertexArray(vao.vaoId);
-        //         //  skycubemap
-        //         glUseProgram(shader.programId());
-        //         // Activez les unités de texture
-        //         shader.setMat3(m_skyShaderUniform.viewMatrixCiel, glm::mat3(m_camera->viewMatrix()));
-        //         shader.setMat4(m_skyShaderUniform.projectionMatrixCiel, m_camera->projectionMatrix());
-        //         // glBindTextureUnit(3, textSky.skyDomeTextureID);
-        //         glBindTextureUnit(3, textSky.jourTextureID);
-        //         glBindTextureUnit(4, textSky.nuitTextureID);
-        //         glDrawElements(GL_TRIANGLES, vao.indexSize, GL_UNSIGNED_INT, 0);
-        //         glEnable(GL_DEPTH_TEST);
-        //     });
-
-        world.system<Window, Shader>("RenderPass_Color")
+        world.system<std::shared_ptr<Viewport>, Camera3d>("RenderPass_Color")
             .kind(phase) //
-            .term_at(0)
-            .singleton()
-            .each([this](flecs::iter &it, size_t i, const Window &w, const Shader &shader) {
-                // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+            .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam) {
+                auto shader = it.world().get<Shader>();
 
-                // // 2. then render scene as normal with shadow mapping (using depth map)
-                glViewport(w.fbo->x, w.fbo->y, w.fbo->width, w.fbo->height);
+                glViewport(vp->x, vp->y, vp->width, vp->height);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
 
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_BACK);
 
-                // Render objects
-                glUseProgram(shader.programId());
-                // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
+                glUseProgram(shader->programId());
 
-                // Idk if I should use the System or the Query. System is multithreaded.
-                // renderNode(root);
-                // this->renderMeshSystem.run();
+                // Render all entities with the view camera
                 this->renderables
-                    .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+                    .each([cam](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
                         auto e = it.entity(i);
                         // render cubes
                         glm::mat4 worldTransform = Math::computeWorldTransform(e);
 
                         mat.shader->setMat4(10, worldTransform); // worldMatrix
-                        // camera
-                        // auto view = it.world().get<CameraView3d>();
-                        // auto pers = it.world().get<CameraPerspective3d>();
-                        auto cam = it.world().get<Camera3d>();
-                        mat.shader->setMat4(11, cam->view);       // viewMatrix
-                        mat.shader->setMat4(12, cam->projection); // projectionMatrix
-                        mat.shader->setVec3(13, cam->pos);        // camPos
+                        mat.shader->setMat4(11, cam.view);       // viewMatrix
+                        mat.shader->setMat4(12, cam.projection); // projectionMatrix
+                        mat.shader->setVec3(13, cam.pos);        // camPos
 
                         glBindVertexArray(mesh.vaoId);
                         glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
                     });
-
-                // glBindFramebuffer(GL_FRAMEBUFFER, 0);
             });
     }
 
@@ -181,34 +152,14 @@ public:
                                 .cached()
                                 .query_flags(EcsQueryMatchEmptyTables)
                                 .build();
-        this->renderMeshSystem = world
-                                     .system<Transform3d, MeshVao, Material>("RenderMesh")
-                                     .kind(0) // //  .multi_threaded()
-                                     .each([](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                                         auto e = it.entity(i);
-                                         // render cubes
-                                         glm::mat4 worldTransform = Math::computeWorldTransform(e);
-
-                                         mat.shader->setMat4(10, worldTransform); // worldMatrix
-                                         // camera
-                                         // auto view = it.world().get<CameraView3d>();
-                                         // auto pers = it.world().get<CameraPerspective3d>();
-                                         auto cam = it.world().get<Camera3d>();
-                                         mat.shader->setMat4(11, cam->view);       // viewMatrix
-                                         mat.shader->setMat4(12, cam->projection); // projectionMatrix
-                                         mat.shader->setVec3(13, cam->pos);        // camPos
-
-                                         glBindVertexArray(mesh.vaoId);
-                                         glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-                                     });
     }
 
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) override {
-        world.system<Window, std::shared_ptr<Ui>>("RenderUi_Imgui")
+        world.system<std::shared_ptr<Window>, std::shared_ptr<Ui>>("RenderUi_Imgui")
             .kind(phase) //
             .term_at(0)
             .singleton()
-            .each([](flecs::iter &it, size_t i, const Window &w, std::shared_ptr<Ui> ui) {
+            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w, std::shared_ptr<Ui> ui) {
                 // Select root node by default
                 // if (getSelectedNode() == nullptr)
                 //     setSelectedNode(root);
@@ -233,13 +184,13 @@ public:
     }
 
     virtual void systemRenderWindow(flecs::world &world, flecs::entity_t phase) override {
-        world.system<Window>("Window")
+        world.system<std::shared_ptr<Window>>("Window")
             .term_at(0)
             .singleton()
             .kind(phase)
-            .each([](flecs::iter &it, size_t i, const Window &w) {
+            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w) {
                 // Show rendering and get events
-                glfwSwapBuffers(w.m_window);
+                glfwSwapBuffers(w->m_window);
                 // m_imGuiActive = ImGui::IsAnyItemActive();
                 glfwPollEvents();
             });
