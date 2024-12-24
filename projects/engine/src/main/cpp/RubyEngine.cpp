@@ -13,7 +13,7 @@ std::string RubyEngine::Greeter::greeting() {
 
 void Ruby::init() {
     // ---------- Window
-    Fbo* fbo;
+    Fbo* fbo = new Fbo();
     fbo->width = 1700;
     fbo->height = 900;
     Window window;
@@ -43,4 +43,5 @@ void Ruby::start() {
     // ---------- Cleanup
     glfwDestroyWindow(world.get<Window>()->m_window);
     glfwTerminate();
+    ecs_fini(world.c_ptr());
 }

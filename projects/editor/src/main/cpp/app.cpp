@@ -74,7 +74,7 @@ void App::init(Ruby ruby)
             parent.set<MeshVao>(cubeBuffer);
             parent.set<Material>(mat);
 
-            parent.scope([&]
+            // parent.scope([&]
             {
                 Transform3d tr2;
                 tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
@@ -92,8 +92,9 @@ void App::init(Ruby ruby)
                 grandchild.set<Mesh>(*cube);
                 grandchild.set<MeshVao>(cubeBuffer);
                 grandchild.set<Material>(mat);
-            });
-            parent.scope([&]
+            }
+            // );
+            // parent.scope([&]
             {
                 Transform3d tr2;
                 tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
@@ -110,7 +111,8 @@ void App::init(Ruby ruby)
                 grandchild2.set<Mesh>(*gizmo);
                 grandchild2.set<MeshVao>(gizmoBuffer);
                 grandchild2.set<Material>(mat_lines);
-            });
+            }
+            // );
 
             } //
         );
