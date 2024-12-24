@@ -104,7 +104,7 @@ void Window::InitializeCallback() {
 void Window::FramebufferSizeCallback(int width, int height) {
     fbo->width = width;
     fbo->height = height;
-    glViewport(0, 0, width, height);
+    glViewport(fbo->x, fbo->y, width, height);
     // m_camera.viewportEvents(width, height);
 }
 

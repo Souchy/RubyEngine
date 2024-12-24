@@ -39,7 +39,7 @@ public:
                 glBindFramebuffer(GL_FRAMEBUFFER, w.fbo->id);
 
                 // // 2. then render scene as normal with shadow mapping (using depth map)
-                glViewport(0, 0, w.fbo->width, w.fbo->height);
+                glViewport(w.fbo->x, w.fbo->y, w.fbo->width, w.fbo->height);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 glEnable(GL_CULL_FACE);

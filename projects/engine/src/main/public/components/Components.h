@@ -7,6 +7,8 @@ struct UiTag {};
 struct Fbo {
 	GLuint id;
 	GLuint texture;
+	GLuint x;
+	GLuint y;
 	GLuint width;
 	GLuint height;
 	// GLuint depth;

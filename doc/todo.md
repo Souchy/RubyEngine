@@ -17,6 +17,7 @@
 - Instanced Rendering entity.
   - Transform[] component? + CustomData[] component?
   - Additional system for instanced groups
+- Shadows
 - Animation
   - CpuAnimationPlayer
   - GpuAnimationPlayer (Baked from CpuAnimationPlayer)
