@@ -1,13 +1,13 @@
 #pragma once
 
-#include <flecs.h>
 #include "Ui.h"
 #include "Window.h"
+#include "components/WorldQuery.h"
 #include "resources/Material.h"
 #include "shaders/Shader.h"
 #include "util/Math.h"
 #include "util/MeshVao.h"
-#include "components/WorldQuery.h"
+#include <flecs.h>
 
 class Pipeline {
 public:
@@ -15,6 +15,7 @@ public:
     virtual void systemInputs(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemUpdateLogic(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemUpdatePhysic(flecs::world &world, flecs::entity_t phase) = 0;
+    virtual void systemClearWindow(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderDepth(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) = 0;
@@ -26,6 +27,7 @@ public:
     virtual void init(flecs::world &world) override {
         // ----- Pipeline
         ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
+        ecs_entity_t ClearWindow = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t RenderingDepth = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t RenderingColor = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t RenderingUi = ecs_new_w_id(world, EcsPhase);
@@ -33,7 +35,8 @@ public:
 
         // Phases can (but don't have to) depend on other phases which forces ordering
         ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
-        ecs_add_pair(world, RenderingDepth, EcsDependsOn, Physics);
+        ecs_add_pair(world, ClearWindow, EcsDependsOn, Physics);
+        ecs_add_pair(world, RenderingDepth, EcsDependsOn, ClearWindow);
         ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingDepth);
         ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingColor);
         ecs_add_pair(world, RenderWindow, EcsDependsOn, RenderingUi);
@@ -44,6 +47,7 @@ public:
             systemInputs(world, flecs::PreUpdate);
             systemUpdateLogic(world, flecs::OnUpdate);
             systemUpdatePhysic(world, Physics);
+            systemClearWindow(world, ClearWindow);
         }
         {
             // For each light
@@ -111,26 +115,35 @@ public:
             });
     }
 
-    virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemClearWindow(flecs::world &world, flecs::entity_t phase) override {
         // Window
         world.system<std::shared_ptr<Window>>("Clear Window")
             .kind(phase) //
             .term_at(0)
             .singleton()
             .each([](const std::shared_ptr<Window> &w) {
+                // Clear background
+                glClearColor(0, 0, 0, 1);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                // glm::vec4 clearColor;
-                // glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_BACK);
             });
+    }
+    virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
         // Viewport
         world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("Render_Viewport")
             .kind(phase) //
             .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
-                auto shader = it.world().get<Shader>();
+                // Enable the scissor test
+                glEnable(GL_SCISSOR_TEST);
 
+                auto shader = it.world().get<Shader>();
                 glViewport(vp->x, vp->y, vp->width, vp->height);
+                glScissor(vp->x, vp->y, vp->width, vp->height);
+
+                // Clear viewport
+                glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glUseProgram(shader->programId());
 
                 // Render all entities with the view camera
@@ -148,6 +161,8 @@ public:
                         glBindVertexArray(mesh.vaoId);
                         glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
                     });
+                // Disable the scissor test
+                glDisable(GL_SCISSOR_TEST);
             });
     }
 

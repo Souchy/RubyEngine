@@ -3,9 +3,9 @@
  */
 
 #include <App.h>
+#include <components/WorldQuery.h>
 #include <iostream>
 #include <stdlib.h>
-#include <components/WorldQuery.h>
 
 int main() {
     RubyEngine::Greeter greeter;
@@ -39,6 +39,7 @@ void App::init(Ruby *ruby) {
     };
     ruby->world.set<std::shared_ptr<Window>>(window);
     ruby->world.set<WindowSize>(ws);
+    glEnable(GL_SCISSOR_TEST);
 
     // ---------- Views
     auto viewQuery = ruby->world
@@ -56,44 +57,60 @@ void App::init(Ruby *ruby) {
             // });
         });
 
-    // Define View
+    // Define Views
     {
-        // Camera
-        // Z+ is towards the screen. Z- is away.
-        auto camPos = glm::vec3(0, 5, 10);
-        auto camTarget = glm::vec3(0.0f);
-        auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-        auto fov = glm::radians(45.0f);
-        Camera3d cam;
-        cam.pos = camPos;
-        cam.projection = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
-        cam.view = glm::lookAt(camPos, camTarget, camUp);
-
-        // Viewport
-        std::shared_ptr<PercentViewport> vp = std::make_shared<PercentViewport>();
-        vp->xPercentOfWidth = 0.5f;
-        vp->yPercentOfHeight = 0.0f;
-        vp->widthPercentOfWidth = 0.5f;
-        vp->heightPercentOfHeight = 1.0f;
-        vp->resize(ws.width, ws.height);
-
         // View world
         WorldQuery query;
         query.renderables = ruby->world.query_builder<Transform3d, MeshVao, Material>()
                                 .cached()
                                 .query_flags(EcsQueryMatchEmptyTables)
                                 .build();
-        // Entity View = Camera + Viewport
-        ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<WorldQuery>(query);
-        
-        // Viewport 2
-        std::shared_ptr<PercentViewport> vp2 = std::make_shared<PercentViewport>();
-        vp2->xPercentOfWidth = 0.0f;
-        vp2->yPercentOfHeight = 0.0f;
-        vp2->widthPercentOfWidth = 0.5f;
-        vp2->heightPercentOfHeight = 1.0f;
-        vp2->resize(ws.width, ws.height);
-        ruby->world.entity("view2").set<std::shared_ptr<Viewport>>(vp2).set<Camera3d>(cam).set<WorldQuery>(query);
+        {
+            // Camera
+            // Z+ is towards the screen. Z- is away.
+            auto camPos = glm::vec3(0, 5, 10);
+            auto camTarget = glm::vec3(0.0f);
+            auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
+            auto fov = glm::radians(45.0f);
+            Camera3d cam;
+            cam.pos = camPos;
+            cam.projection = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
+            cam.view = glm::lookAt(camPos, camTarget, camUp);
+
+            // Viewport
+            std::shared_ptr<PercentViewport> vp = std::make_shared<PercentViewport>();
+            vp->xPercentOfWidth = 0.5f;
+            vp->yPercentOfHeight = 0.0f;
+            vp->widthPercentOfWidth = 0.5f;
+            vp->heightPercentOfHeight = 1.0f;
+            vp->clearColor = glm::vec4(0.5f, 0.0f, 0.2f, 1.0f);
+            vp->resize(ws.width, ws.height);
+
+            // Entity View = Camera + Viewport
+            ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<WorldQuery>(query);
+        }
+        {
+            // Camera
+            // Z+ is towards the screen. Z- is away.
+            auto camPos = glm::vec3(0, 5, -10);
+            auto camTarget = glm::vec3(0.0f);
+            auto camUp = glm::vec3(0.0f, 1.0f, 0.0f);
+            auto fov = glm::radians(45.0f);
+            Camera3d cam;
+            cam.pos = camPos;
+            cam.projection = glm::perspective(fov, 16.f / 9.f, 0.1f, 300.0f);
+            cam.view = glm::lookAt(camPos, camTarget, camUp);
+
+            // Viewport 2
+            std::shared_ptr<PercentViewport> vp2 = std::make_shared<PercentViewport>();
+            vp2->xPercentOfWidth = 0.0f;
+            vp2->yPercentOfHeight = 0.0f;
+            vp2->widthPercentOfWidth = 0.5f;
+            vp2->heightPercentOfHeight = 1.0f;
+            vp2->clearColor = glm::vec4(0.0f, 0.2f, 0.5f, 1.0f);
+            vp2->resize(ws.width, ws.height);
+            ruby->world.entity("view2").set<std::shared_ptr<Viewport>>(vp2).set<Camera3d>(cam).set<WorldQuery>(query);
+        }
     }
 
     // ---------- Pipeline

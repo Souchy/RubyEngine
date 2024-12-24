@@ -20,20 +20,21 @@ struct Fbo {
 };
 
 struct WindowSize {
-	unsigned int width;
-	unsigned int height;
+    unsigned int width;
+    unsigned int height;
 };
 
 class Viewport {
 public:
-	// Camera3d *camera;
+    // Camera3d *camera;
     GLint x;
     GLint y;
     GLsizei width;
     GLsizei height;
-	bool aspectFixed;
-	float aspect;
-	// Transform3d transform;
+    bool aspectFixed;
+    float aspect;
+    glm::vec4 clearColor;
+    // Transform3d transform;
     virtual void resize(int width, int height) = 0;
 };
 
@@ -57,21 +58,20 @@ public:
         this->width = widthPercentOfWidth * width;
         this->height = heightPercentOfHeight * height;
 
-		// if (aspectFixed) {
-		// 	this->width = this->height * aspect;
-		// }
-		// // Fit
-		// if(true) {
+        // if (aspectFixed) {
+        // 	this->width = this->height * aspect;
+        // }
+        // // Fit
+        // if(true) {
 
-		// }
-		// // Fill
-		// if(true) {
+        // }
+        // // Fill
+        // if(true) {
 
-		// }
-		// // Extend
-		// if(true) {
+        // }
+        // // Extend
+        // if(true) {
 
-		// }
-
+        // }
     }
 };
