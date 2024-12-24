@@ -5,21 +5,21 @@
 #include "RubyEngine.h"
 #include <util/Math.h>
 
-flecs::world Ruby::world;
-flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
-flecs::system Ruby::renderMeshSystem;
+// flecs::world Ruby::world;
+// flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
+// flecs::system Ruby::renderMeshSystem;
 
 std::string RubyEngine::Greeter::greeting() {
     return std::string("Hello, World!");
 }
 
 void Ruby::initDefaultPipeline() {
-    Ruby::renderables = world.query_builder<Transform3d, MeshVao, Material>()
+    renderables = world.query_builder<Transform3d, MeshVao, Material>()
                             .cached()
                             .query_flags(EcsQueryMatchEmptyTables)
                             .build();
 
-    Ruby::renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderMesh")
+    renderMeshSystem = world.system<Transform3d, MeshVao, Material>("RenderMesh")
                                  .kind(0) //
                                           //  .multi_threaded()
                                  .each([this](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
@@ -148,7 +148,7 @@ void Ruby::initOnUpdate() {
             // glBindTextureUnit(0, *depthMap); // Bind shadow map to texture unit 0
             // renderNode(root);
             // Idk if I should use the System or the Query. System is multithreaded.
-            Ruby::renderMeshSystem.run();
+            this->renderMeshSystem.run();
 
             // glBindFramebuffer(GL_FRAMEBUFFER, 0);
         });
