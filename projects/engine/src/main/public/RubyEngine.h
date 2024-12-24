@@ -30,6 +30,7 @@
 #include <util/shapes/Gizmo.h>
 #include <io/Files.h>
 #include <Ui.h>
+#include <DefaultPipeline.h>
 
 namespace RubyEngine {
 class Greeter {
@@ -42,8 +43,9 @@ public:
 class Ruby {
 public:
     flecs::world world;
-    flecs::query<Transform3d, MeshVao, Material> renderables;
-    flecs::system renderMeshSystem;
+    // flecs::query<Transform3d, MeshVao, Material> renderables;
+    // flecs::system renderMeshSystem;
+    std::shared_ptr<Pipeline> pipeline;
 
     void init();
     void bla(flecs::world &world);
