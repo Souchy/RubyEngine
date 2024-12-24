@@ -17,7 +17,7 @@ public:
     virtual void systemUpdatePhysic(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemClearWindow(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderDepth(flecs::world &world, flecs::entity_t phase) = 0;
-    virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) = 0;
+    virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderWindow(flecs::world &world, flecs::entity_t phase) = 0;
 };
@@ -53,7 +53,7 @@ public:
             // For each light
             systemRenderDepth(world, RenderingDepth);
             // For each camera / viewport
-            systemRenderColor(world, RenderingColor);
+            systemRenderViewport(world, RenderingColor);
         }
         {
             // Only once instance
@@ -129,7 +129,7 @@ public:
                 glCullFace(GL_BACK);
             });
     }
-    virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override {
         // Viewport
         world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("Render_Viewport")
             .kind(phase) //

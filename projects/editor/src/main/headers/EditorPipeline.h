@@ -5,7 +5,7 @@
 class EditorPipeline : public DefaultPipeline {
 public:
 
-    virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override {
         // ---------- Create FBO texture
 
 		// Fbo fbo;
