@@ -1,12 +1,13 @@
 #pragma once
 
+#include <flecs.h>
 #include "Ui.h"
 #include "Window.h"
 #include "resources/Material.h"
 #include "shaders/Shader.h"
 #include "util/Math.h"
 #include "util/MeshVao.h"
-#include <flecs.h>
+#include "components/WorldQuery.h"
 
 class Pipeline {
 public:
@@ -111,9 +112,9 @@ public:
     }
 
     virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
-        world.system<std::shared_ptr<Viewport>, Camera3d, flecs::query<Transform3d, MeshVao, Material>>("RenderPass_Color")
+        world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("RenderPass_Color")
             .kind(phase) //
-            .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const flecs::query<Transform3d, MeshVao, Material> &renderables) {
+            .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
                 auto shader = it.world().get<Shader>();
 
                 glViewport(vp->x, vp->y, vp->width, vp->height);
@@ -126,7 +127,7 @@ public:
                 glUseProgram(shader->programId());
 
                 // Render all entities with the view camera
-                renderables
+                query.renderables
                     .each([cam](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
                         auto e = it.entity(i);
                         // render cubes
