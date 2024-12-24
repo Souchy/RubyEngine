@@ -14,6 +14,14 @@ std::string RubyEngine::Greeter::greeting() {
 }
 
 void Ruby::initDefaultPipeline() {
+
+    initPreUpdate();
+    initOnUpdate();
+    bla(this->world);
+    initPostUpdate();
+}
+
+void Ruby::bla(flecs::world &world) {
     renderables = world.query_builder<Transform3d, MeshVao, Material>()
                             .cached()
                             .query_flags(EcsQueryMatchEmptyTables)
@@ -42,24 +50,6 @@ void Ruby::initDefaultPipeline() {
                                      // glBindVertexArray(Geometry::gizmoMesh->m_VAOs[Mesh::Torus]);
                                      // glDrawElements(GL_LINES, (GLsizei)(Geometry::gizmoMesh->m_nbTri * 3), GL_UNSIGNED_INT, nullptr);
                                  });
-    initPreUpdate();
-    initOnUpdate();
-    initPostUpdate();
-}
-
-void Ruby::initPreUpdate() {
-    world.system<Window>("Inputs").term_at(0).singleton().kind(flecs::PreUpdate) //
-        .each([](flecs::iter &it, size_t i, Window &w) {
-            if (glfwGetKey(w.m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                glfwSetWindowShouldClose(w.m_window, true);
-            // if (!m_imGuiActive)
-            // {
-            // 	m_camera.keybordEvents(m_window, delta_time);
-            // }
-        });
-}
-
-void Ruby::initOnUpdate() {
     // ----- Pipeline
 
     // ecs_entity_t UpdateLogic = ecs_new_w_id(world, EcsPhase);
@@ -79,6 +69,15 @@ void Ruby::initOnUpdate() {
     ecs_add_pair(world, RenderWindow, EcsDependsOn, RenderingUi);
 
     // ----- Systems
+    world.system<Window>("Inputs").term_at(0).singleton().kind(flecs::PreUpdate) //
+        .each([](flecs::iter &it, size_t i, Window &w) {
+            if (glfwGetKey(w.m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                glfwSetWindowShouldClose(w.m_window, true);
+            // if (!m_imGuiActive)
+            // {
+            // 	m_camera.keybordEvents(m_window, delta_time);
+            // }
+        });
 
     world.system<Transform3d, Velocity>("UpdateLogic")
         .kind(flecs::OnUpdate) //
@@ -190,6 +189,12 @@ void Ruby::initOnUpdate() {
             // m_imGuiActive = ImGui::IsAnyItemActive();
             glfwPollEvents();
         });
+}
+
+void Ruby::initPreUpdate() {
+}
+
+void Ruby::initOnUpdate() {
 }
 
 void Ruby::initPostUpdate() {

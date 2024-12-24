@@ -46,6 +46,7 @@ public:
     flecs::system renderMeshSystem;
 
     void init();
+    void bla(flecs::world &world);
     void initDefaultPipeline();
     void initPreUpdate();
     void initOnUpdate();
