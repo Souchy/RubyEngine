@@ -4,6 +4,7 @@
 
 #include "RubyEngine.h"
 #include <util/Math.h>
+#include <BsPipeline.h>
 
 // flecs::world Ruby::world;
 // flecs::query<Transform3d, MeshVao, Material> Ruby::renderables;
@@ -15,10 +16,11 @@ std::string RubyEngine::Greeter::greeting() {
 
 void Ruby::initDefaultPipeline() {
 
-    initPreUpdate();
-    initOnUpdate();
+    // EditorPipeline pipeline;
+    // DefaultPipeline pipeline;
+    BsPipeline pipeline;
+    pipeline.init(this->world);
     bla(this->world);
-    initPostUpdate();
 }
 
 void Ruby::bla(flecs::world &world) {
