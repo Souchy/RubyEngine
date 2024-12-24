@@ -42,8 +42,14 @@ public:
 class Ruby {
 public:
     static flecs::world world;
+    static flecs::query<Transform3d, MeshVao, Material> renderables;
+    static flecs::system renderMeshSystem;
 
     void init();
+    void initDefaultPipeline();
+    void initPreUpdate();
+    void initOnUpdate();
+    void initPostUpdate();
     void start();
 };
 
