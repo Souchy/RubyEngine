@@ -16,15 +16,12 @@ public:
     virtual void systemUpdatePhysic(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderDepth(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) = 0;
-    virtual void systemRenderMesh(flecs::world &world) = 0;
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) = 0;
     virtual void systemRenderWindow(flecs::world &world, flecs::entity_t phase) = 0;
 };
 
 class DefaultPipeline : public Pipeline {
 public:
-    flecs::query<Transform3d, MeshVao, Material> renderables;
-
     virtual void init(flecs::world &world) override {
         // ----- Pipeline
         ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
@@ -41,7 +38,6 @@ public:
         ecs_add_pair(world, RenderWindow, EcsDependsOn, RenderingUi);
 
         // ----- Systems
-        systemRenderMesh(world);
         {
             // Only once instance
             systemInputs(world, flecs::PreUpdate);
@@ -115,9 +111,9 @@ public:
     }
 
     virtual void systemRenderColor(flecs::world &world, flecs::entity_t phase) override {
-        world.system<std::shared_ptr<Viewport>, Camera3d>("RenderPass_Color")
+        world.system<std::shared_ptr<Viewport>, Camera3d, flecs::query<Transform3d, MeshVao, Material>>("RenderPass_Color")
             .kind(phase) //
-            .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam) {
+            .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const flecs::query<Transform3d, MeshVao, Material> &renderables) {
                 auto shader = it.world().get<Shader>();
 
                 glViewport(vp->x, vp->y, vp->width, vp->height);
@@ -130,7 +126,7 @@ public:
                 glUseProgram(shader->programId());
 
                 // Render all entities with the view camera
-                this->renderables
+                renderables
                     .each([cam](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
                         auto e = it.entity(i);
                         // render cubes
@@ -145,13 +141,6 @@ public:
                         glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
                     });
             });
-    }
-
-    virtual void systemRenderMesh(flecs::world &world) override {
-        this->renderables = world.query_builder<Transform3d, MeshVao, Material>()
-                                .cached()
-                                .query_flags(EcsQueryMatchEmptyTables)
-                                .build();
     }
 
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) override {

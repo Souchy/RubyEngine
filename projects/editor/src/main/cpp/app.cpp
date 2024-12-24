@@ -55,6 +55,7 @@ void App::init(Ruby *ruby) {
             // });
         });
 
+    // Define View
     {
         // Camera
         // Z+ is towards the screen. Z- is away.
@@ -76,8 +77,14 @@ void App::init(Ruby *ruby) {
         vp->clearColor = glm::vec4(0.2f, 0.0f, 0.1f, 1.0f);
         vp->resize(ws.width, ws.height);
 
+        // View world
+        // QueryWorld3d query;
+        auto renderables = ruby->world.query_builder<Transform3d, MeshVao, Material>()
+                                .cached()
+                                .query_flags(EcsQueryMatchEmptyTables)
+                                .build();
         // Entity View = Camera + Viewport
-        ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam);
+        ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<flecs::query<Transform3d, MeshVao, Material>>(renderables);
     }
 
     // ---------- Pipeline
