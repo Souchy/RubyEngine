@@ -23,12 +23,6 @@ public:
 
 class DefaultPipeline : public Pipeline {
 public:
-    // ecs_entity_t Physics;
-    // ecs_entity_t RenderingDepth;
-    // ecs_entity_t RenderingColor;
-    // ecs_entity_t RenderingUi;
-    // ecs_entity_t RenderWindow;
-
     flecs::query<Transform3d, MeshVao, Material> renderables;
     flecs::system renderMeshSystem;
 
@@ -50,13 +44,23 @@ public:
         // ----- Systems
         systemRenderMesh(world);
 
-        systemInputs(world, flecs::PreUpdate);
-        systemUpdateLogic(world, flecs::OnUpdate);
-        systemUpdatePhysic(world, Physics);
-        systemRenderDepth(world, RenderingDepth);
-        systemRenderColor(world, RenderingColor);
-        systemRenderUi(world, RenderingUi);
-        systemRenderWindow(world, RenderWindow);
+        {
+            // Only once instance
+            systemInputs(world, flecs::PreUpdate);
+            systemUpdateLogic(world, flecs::OnUpdate);
+            systemUpdatePhysic(world, Physics);
+        }
+        {
+            // For each light
+            systemRenderDepth(world, RenderingDepth);
+            // For each camera / viewport
+            systemRenderColor(world, RenderingColor);
+        }
+        {
+            // Only once instance
+            systemRenderUi(world, RenderingUi);
+            systemRenderWindow(world, RenderWindow);
+        }
     }
 
     virtual void systemInputs(flecs::world &world, flecs::entity_t phase) override {
@@ -76,7 +80,7 @@ public:
 
     virtual void systemUpdateLogic(flecs::world &world, flecs::entity_t phase) override {
         world.system<Transform3d, Velocity>("UpdateLogic")
-            .kind(phase) // flecs::OnUpdate) //
+            .kind(phase)
             .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
                 auto mat = glm::translate(trans.value, vel.value * it.delta_time());
                 trans.value = mat;
