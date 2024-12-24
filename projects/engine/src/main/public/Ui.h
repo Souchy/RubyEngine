@@ -59,4 +59,7 @@ public:
 
     virtual void drawScene(const Fbo *fbo) {
     }
+    
+    virtual void drawFilesystem() {
+    }
 };
