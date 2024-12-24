@@ -5,16 +5,26 @@
 
 # Features
 
-- Scenes
-  - Each scene should have a camera and FBO (size..)
-  - Scene save/loader + tabs in the engine
-  - Scene instancing inside other scenes
-  - Swappable Renderer per scene
+- Resize viewports on resize
+- Resize fbos on resize
+- Fbo to Imgui
+- Fbo targets (depth, color, physics)
+- ImGui entity properties -> render components
+
+## More
+
+- Stage
+  - Each stage should have a camera and FBO (size..)
+  - Swappable Renderer per stage
     - Render to Fbo
-    - Render color
     - Render depth
+    - Render color
     - Render physic objects
-- Instanced Rendering entity.
+- Scene
+  - Scene save/loader + ui tabs in the editor
+  - Scene instancing inside other scenes
+- Ui pages (ie. different scene, world or query)
+- Instanced Rendering entity
   - Transform[] component? + CustomData[] component?
   - Additional system for instanced groups
 - Shadows
@@ -56,11 +66,3 @@ Just make a different world and render it as well?
 
 Make make a Layout to organize the cameras?
 or just tell each cam to render at specific coordinates on the screen (viewport)?
-
-# Ui
-
-Also need different ui pages
-
-# Saves
-
-Scenes as saves and as nodes

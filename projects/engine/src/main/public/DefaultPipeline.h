@@ -29,7 +29,7 @@ public:
         ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t ClearWindow = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t RenderingDepth = ecs_new_w_id(world, EcsPhase);
-        ecs_entity_t RenderingColor = ecs_new_w_id(world, EcsPhase);
+        // ecs_entity_t RenderingColor = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t RenderingUi = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t RenderWindow = ecs_new_w_id(world, EcsPhase);
 
@@ -37,8 +37,9 @@ public:
         ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
         ecs_add_pair(world, ClearWindow, EcsDependsOn, Physics);
         ecs_add_pair(world, RenderingDepth, EcsDependsOn, ClearWindow);
-        ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingDepth);
-        ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingColor);
+        // ecs_add_pair(world, RenderingColor, EcsDependsOn, RenderingDepth);
+        // ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingColor);
+        ecs_add_pair(world, RenderingUi, EcsDependsOn, RenderingDepth);
         ecs_add_pair(world, RenderWindow, EcsDependsOn, RenderingUi);
 
         // ----- Systems
@@ -53,7 +54,7 @@ public:
             // For each light
             systemRenderDepth(world, RenderingDepth);
             // For each camera / viewport
-            systemRenderViewport(world, RenderingColor);
+            // systemRenderViewport(world, RenderingColor);
         }
         {
             // Only once instance
@@ -99,6 +100,7 @@ public:
             .term_at(0)
             .singleton()
             .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w, const Shader &shader) {
+                // printf("RenderPass_Depth\n");
                 // glViewport(0, 0, 1024, 1024);
                 // glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
                 // glEnable(GL_CULL_FACE);
@@ -116,24 +118,19 @@ public:
     }
 
     virtual void systemClearWindow(flecs::world &world, flecs::entity_t phase) override {
-        // Window
-        world.system<std::shared_ptr<Window>>("Clear Window")
-            .kind(phase) //
-            .term_at(0)
-            .singleton()
-            .each([](const std::shared_ptr<Window> &w) {
-                // Clear background
-                glClearColor(0, 0, 0, 1);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glEnable(GL_CULL_FACE);
-                glCullFace(GL_BACK);
-            });
-    }
-    virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override {
         // Viewport
-        world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("Render_Viewport")
-            .kind(phase) //
+        auto viewSystem = world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("Render_Viewport")
+            // .kind(phase) //
+            .kind(0) // do not execute on progress
             .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
+
+                auto viewEntity = it.entity(i);
+                bool hasFbo = viewEntity.has<Fbo>();
+                if(hasFbo) {
+                    auto fbo = viewEntity.get<Fbo>();
+                    glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
+                }
+
                 // Enable the scissor test
                 glEnable(GL_SCISSOR_TEST);
 
@@ -163,7 +160,39 @@ public:
                     });
                 // Disable the scissor test
                 glDisable(GL_SCISSOR_TEST);
+                
+                if(hasFbo) {
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                }
             });
+
+        // Window
+        world.system<std::shared_ptr<Window>>("Render Window")
+            .kind(phase) //
+            .term_at(0)
+            .singleton()
+            .each([viewSystem](const std::shared_ptr<Window> &w) { // flecs::entity entity, 
+                // bool hasFbo = entity.has<Fbo>();
+                if(w->fbo) {
+                    // auto fbo = entity.get<Fbo>();
+                    glBindFramebuffer(GL_FRAMEBUFFER, w->fbo->id);
+                }
+
+                // Clear background
+                glClearColor(0, 0, 0, 1);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_BACK);
+
+                // Render views
+                viewSystem.run();
+
+                if(w->fbo) {
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                }
+            });
+    }
+    virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override {
     }
 
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) override {

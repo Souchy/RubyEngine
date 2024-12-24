@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Ui.h>
+#include <Window.h>
 #include <flecs.h>
 #include <imgui.h>
-#include <Window.h>
 
 class AppUi : public Ui {
 public:
@@ -19,7 +19,7 @@ public:
         ImGui::End();
 
         ImGui::Begin("Scene");
-        auto w = root.world().get<Window>();
+        // auto w = root.world().get<Window>();
         // drawScene(w->fbo);
         ImGui::End();
 
@@ -31,10 +31,19 @@ public:
     }
 
     void drawScene(const Fbo *fbo) override {
+        // ImGui::BeginMenu();
+        // ImGui::MenuItem("Scene", NULL, false, false);
+        // ImGui::EndMenu();
+
+        static const char *items[]{"One", "Two", "three"};
+        static int Selecteditem = 0;
+        if (ImGui::Combo("MyCombo", &Selecteditem, items, IM_ARRAYSIZE(items))) {
+            // choose fbo to render
+        }
+
         // ImGui::Image(fbo->texture, ImVec2(fbo->width, fbo->height));
     }
-    
+
     void drawFilesystem() override {
-        
     }
 };
