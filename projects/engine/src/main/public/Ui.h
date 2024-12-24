@@ -2,6 +2,8 @@
 
 #include "components/3d/Components3d.h"
 #include "components/Components.h"
+#include <flecs.h>
+#include <imgui.h>
 
 class Ui {
 public:
@@ -58,5 +60,8 @@ public:
     }
 
     virtual void drawScene(const Fbo *fbo) {
+    }
+    
+    virtual void drawFilesystem() {
     }
 };
