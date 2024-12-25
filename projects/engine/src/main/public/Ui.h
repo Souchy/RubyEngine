@@ -7,9 +7,13 @@
 
 class Ui {
 public:
-    flecs::entity selected;
+    flecs::entity selectedEntity;
     
+    Ui() {
+    }
     virtual ~Ui() = default;                   // Virtual destructor
+
+    virtual void init(flecs::entity root) = 0;
 
     virtual void draw(flecs::entity root) = 0;
 
@@ -20,7 +24,7 @@ public:
         bool open = ImGui::TreeNodeEx(entity.name().c_str(), flags);
         // Selection
         if (ImGui::IsItemClicked()) {
-            selected = entity;
+            selectedEntity = entity;
         }
         // Draw vertical lines
         if (depth > 0) {
@@ -59,7 +63,7 @@ public:
         // });
     }
 
-    virtual void drawScene(const Fbo *fbo) {
+    virtual void drawScene(flecs::entity root) {
     }
     
     virtual void drawFilesystem() {

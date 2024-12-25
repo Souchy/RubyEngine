@@ -6,6 +6,8 @@
 #include <components/WorldQuery.h>
 #include <iostream>
 #include <stdlib.h>
+#include <memory>
+#include <util/GlUtil.h>
 
 int main()
 {
@@ -43,34 +45,19 @@ void App::init(Ruby *ruby)
     };
     // Fbo
     {
-        Fbo *fbo = new Fbo();
+        std::shared_ptr<Fbo> fbo = std::make_shared<Fbo>();
         fbo->width = ws.width;
         fbo->height = ws.height;
+        GlUtil::genFbo(fbo);
         window->fbo = fbo;
-
-        glGenFramebuffers(1, &window->fbo->id);
-        glBindFramebuffer(GL_FRAMEBUFFER, window->fbo->id);
-
-        glGenTextures(1, &window->fbo->texture);
-        glBindTexture(GL_TEXTURE_2D, window->fbo->texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window->fbo->width, window->fbo->height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, window->fbo->texture, 0);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            // Handle framebuffer not complete
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     ruby->world.set<std::shared_ptr<Window>>(window);
+        //.set<std::shared_ptr<Fbo>>(window->fbo); // maybe? pour query tous les fbo et les resize/select 
     ruby->world.set<WindowSize>(ws);
 
     // ---------- Views
     auto viewQuery = ruby->world
-                         .query_builder<std::shared_ptr<Viewport>, Camera3d>()
+                         .query_builder<std::shared_ptr<Viewport>, Camera3d, WorldQuery>()
                          .cached()
                          .query_flags(EcsQueryMatchEmptyTables)
                          .build();
@@ -80,7 +67,7 @@ void App::init(Ruby *ruby)
         .event(flecs::OnSet)
         .each([&](WindowSize &ws)
               {
-                  // viewQuery.each([ws](std::shared_ptr<Viewport> &vp, Camera3d &cam) {
+                  // viewQuery.each([ws](std::shared_ptr<Viewport> &vp, Camera3d &cam, const WorldQuery &query) {
                   //     vp->resize(ws.width, ws.height);
                   // });
               });
@@ -151,6 +138,7 @@ void App::init(Ruby *ruby)
 
     // ---------- UI
     std::shared_ptr<Ui> ui = std::make_shared<AppUi>();
+    ui->init(ruby->world.entity("root"));
     ruby->world.set<std::shared_ptr<Ui>>(ui);
 
     // ---------- Shaders

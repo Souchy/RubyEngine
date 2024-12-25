@@ -1,28 +1,47 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "name": "Editor",
-        "type": "cppvsdbg",
-        "request": "launch",
-        "preLaunchTask": "build_bazel",
-        "program": "${workspaceFolder}/bazel-bin/projects/editor.exe",
-        "args": [],
-        "stopAtEntry": false,
-        "cwd": "${workspaceFolder}",
-        "environment": [],
-        "console": "externalTerminal"
-      },
-      {
-        "name": "Example1",
-        "type": "cppvsdbg",
-        "request": "launch",
-        "program": "${workspaceFolder}/bazel-bin/projects/examples.exe",
-        "args": [],
-        "stopAtEntry": false,
-        "cwd": "${workspaceFolder}",
-        "environment": [],
-        "console": "externalTerminal"
-      }
-    ]
-  }
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Editor",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "preLaunchTask": "build_bazel",
+      "program": "${workspaceFolder}/bazel-bin/projects/editor.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "externalTerminal"
+    },
+    {
+      "name": "Example1",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/bazel-bin/projects/examples.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "externalTerminal"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Robyn/Git/apps/RubyEngine/projects/editor/src/main/cpp",
+      "program": "c:/Robyn/Git/apps/RubyEngine/projects/editor/src/main/cpp/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ class Window {
 public:
     // settings
     std::function<void(int, int)> onResize;
-    Fbo* fbo = nullptr;
+    std::shared_ptr<Fbo> fbo = nullptr;
 
     // GLFW Window
     GLFWwindow *m_window = nullptr;
