@@ -37,7 +37,6 @@ void App::init(Ruby *ruby) {
         WindowSize w = {width, height};
         ruby->world.set<WindowSize>(w);
     };
-    // ruby->world.entity("window").set<std::shared_ptr<Window>>(window);
     ruby->world.set<std::shared_ptr<Window>>(window);
     ruby->world.set<WindowSize>(ws);
     glEnable(GL_SCISSOR_TEST);
@@ -53,7 +52,6 @@ void App::init(Ruby *ruby) {
         .observer<WindowSize>()
         .event(flecs::OnSet)
         .each([&](WindowSize &ws) {
-
             // viewQuery.each([ws](std::shared_ptr<Viewport> &vp, Camera3d &cam) {
             //     vp->resize(ws.width, ws.height);
             // });
