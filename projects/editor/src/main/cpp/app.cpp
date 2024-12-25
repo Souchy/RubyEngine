@@ -7,7 +7,8 @@
 #include <iostream>
 #include <stdlib.h>
 
-int main() {
+int main()
+{
     RubyEngine::Greeter greeter;
     std::cout << greeter.greeting() << "!!!!!!!!" << std::endl;
 
@@ -22,7 +23,8 @@ int main() {
     return 0;
 }
 
-void App::init(Ruby *ruby) {
+void App::init(Ruby *ruby)
+{
     // ---------- Window
     WindowSize ws;
     ws.width = 1280;
@@ -30,16 +32,41 @@ void App::init(Ruby *ruby) {
 
     std::shared_ptr<Window> window = std::make_shared<Window>();
     // Window window;
-    if (window->initialize("Ruby", ws) != 0) {
+    if (window->initialize("Ruby", ws) != 0)
+    {
         return;
     }
-    window->onResize = [ruby](int width, int height) {
+    window->onResize = [ruby](int width, int height)
+    {
         WindowSize w = {width, height};
         ruby->world.set<WindowSize>(w);
     };
+    // Fbo
+    {
+        Fbo *fbo = new Fbo();
+        fbo->width = ws.width;
+        fbo->height = ws.height;
+        window->fbo = fbo;
+
+        glGenFramebuffers(1, &window->fbo->id);
+        glBindFramebuffer(GL_FRAMEBUFFER, window->fbo->id);
+
+        glGenTextures(1, &window->fbo->texture);
+        glBindTexture(GL_TEXTURE_2D, window->fbo->texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window->fbo->width, window->fbo->height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, window->fbo->texture, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            // Handle framebuffer not complete
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
     ruby->world.set<std::shared_ptr<Window>>(window);
     ruby->world.set<WindowSize>(ws);
-    glEnable(GL_SCISSOR_TEST);
 
     // ---------- Views
     auto viewQuery = ruby->world
@@ -51,11 +78,12 @@ void App::init(Ruby *ruby) {
     ruby->world
         .observer<WindowSize>()
         .event(flecs::OnSet)
-        .each([&](WindowSize &ws) {
-            // viewQuery.each([ws](std::shared_ptr<Viewport> &vp, Camera3d &cam) {
-            //     vp->resize(ws.width, ws.height);
-            // });
-        });
+        .each([&](WindowSize &ws)
+              {
+                  // viewQuery.each([ws](std::shared_ptr<Viewport> &vp, Camera3d &cam) {
+                  //     vp->resize(ws.width, ws.height);
+                  // });
+              });
 
     // Define Views
     {
@@ -134,7 +162,8 @@ void App::init(Ruby *ruby) {
     success &= shader->addShaderFromSource(GL_VERTEX_SHADER, dir + "/res/base.vert");
     success &= shader->addShaderFromSource(GL_FRAGMENT_SHADER, dir + "/res/base.frag");
     success &= shader->link();
-    if (!success) {
+    if (!success)
+    {
         std::cerr << "Error when loading main shader\n";
         return;
     }
@@ -152,55 +181,56 @@ void App::init(Ruby *ruby) {
         mat_lines.MODE = GL_LINES;
         mat_lines.shader = shader;
 
-        ruby->world.entity("root").scope([&] {
-            Transform3d tr1;
-            tr1.value = glm::mat4(1.0f);
-            flecs::entity parent = ruby->world.entity("parent");
-            parent.set<Transform3d>(tr1);
-            parent.set<Mesh>(*cube);
-            parent.set<MeshVao>(cubeBuffer);
-            parent.set<Material>(mat);
+        ruby->world.entity("root").scope([&]
+                                         {
+                                             Transform3d tr1;
+                                             tr1.value = glm::mat4(1.0f);
+                                             flecs::entity parent = ruby->world.entity("parent");
+                                             parent.set<Transform3d>(tr1);
+                                             parent.set<Mesh>(*cube);
+                                             parent.set<MeshVao>(cubeBuffer);
+                                             parent.set<Material>(mat);
 
-            // parent.scope([&]
-            {
-                Transform3d tr2;
-                tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
-                flecs::entity child = ruby->world.entity("child").child_of(parent);
-                child.set<Transform3d>(tr2);
-                child.set<Mesh>(*cube);
-                child.set<MeshVao>(cubeBuffer);
-                child.set<Material>(mat);
+                                             // parent.scope([&]
+                                             {
+                                                 Transform3d tr2;
+                                                 tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
+                                                 flecs::entity child = ruby->world.entity("child").child_of(parent);
+                                                 child.set<Transform3d>(tr2);
+                                                 child.set<Mesh>(*cube);
+                                                 child.set<MeshVao>(cubeBuffer);
+                                                 child.set<Material>(mat);
 
-                Transform3d tr3;
-                tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
-                // tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
-                flecs::entity grandchild = ruby->world.entity("grandchild").child_of(child);
-                grandchild.set<Transform3d>(tr3);
-                grandchild.set<Mesh>(*cube);
-                grandchild.set<MeshVao>(cubeBuffer);
-                grandchild.set<Material>(mat);
-            }
-            // );
-            // parent.scope([&]
-            {
-                Transform3d tr2;
-                tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
-                flecs::entity child2 = ruby->world.entity("child2").child_of(parent);
-                child2.set<Transform3d>(tr2);
-                child2.set<Mesh>(*cube);
-                child2.set<MeshVao>(cubeBuffer);
-                child2.set<Material>(mat);
+                                                 Transform3d tr3;
+                                                 tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+                                                 // tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
+                                                 flecs::entity grandchild = ruby->world.entity("grandchild").child_of(child);
+                                                 grandchild.set<Transform3d>(tr3);
+                                                 grandchild.set<Mesh>(*cube);
+                                                 grandchild.set<MeshVao>(cubeBuffer);
+                                                 grandchild.set<Material>(mat);
+                                             }
+                                             // );
+                                             // parent.scope([&]
+                                             {
+                                                 Transform3d tr2;
+                                                 tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
+                                                 flecs::entity child2 = ruby->world.entity("child2").child_of(parent);
+                                                 child2.set<Transform3d>(tr2);
+                                                 child2.set<Mesh>(*cube);
+                                                 child2.set<MeshVao>(cubeBuffer);
+                                                 child2.set<Material>(mat);
 
-                Transform3d tr3;
-                tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
-                flecs::entity grandchild2 = ruby->world.entity("grandchild2").child_of(child2);
-                grandchild2.set<Transform3d>(tr3);
-                grandchild2.set<Mesh>(*gizmo);
-                grandchild2.set<MeshVao>(gizmoBuffer);
-                grandchild2.set<Material>(mat_lines);
-            }
-            // );
-        } //
+                                                 Transform3d tr3;
+                                                 tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+                                                 flecs::entity grandchild2 = ruby->world.entity("grandchild2").child_of(child2);
+                                                 grandchild2.set<Transform3d>(tr3);
+                                                 grandchild2.set<Mesh>(*gizmo);
+                                                 grandchild2.set<MeshVao>(gizmoBuffer);
+                                                 grandchild2.set<Material>(mat_lines);
+                                             }
+                                             // );
+                                         } //
         );
     }
 }

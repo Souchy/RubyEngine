@@ -132,6 +132,10 @@ public:
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_BACK);
 
+                if(w->fbo) {
+                    glBindFramebuffer(GL_FRAMEBUFFER, w->fbo->id);
+                }
+
                 views.each([](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
                     // Enable the scissor test
                     glEnable(GL_SCISSOR_TEST);
@@ -163,6 +167,10 @@ public:
                     // Disable the scissor test
                     glDisable(GL_SCISSOR_TEST);
                 });
+
+                if(w->fbo) {
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                }	
             });
     }
     virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override {
