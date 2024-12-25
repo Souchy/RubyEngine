@@ -116,54 +116,56 @@ public:
     }
 
     virtual void systemClearWindow(flecs::world &world, flecs::entity_t phase) override {
+        auto views = world.query_builder<std::shared_ptr<Viewport>, Camera3d, WorldQuery>()
+                                 .cached()
+                                 .query_flags(EcsQueryMatchEmptyTables)
+                                 .build();
         // Window
         world.system<std::shared_ptr<Window>>("Clear Window")
             .kind(phase) //
             .term_at(0)
             .singleton()
-            .each([](const std::shared_ptr<Window> &w) {
+            .each([views](const std::shared_ptr<Window> &w) {
                 // Clear background
                 glClearColor(0, 0, 0, 1);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_BACK);
+
+                views.each([](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
+                    // Enable the scissor test
+                    glEnable(GL_SCISSOR_TEST);
+
+                    auto shader = it.world().get<Shader>();
+                    glViewport(vp->x, vp->y, vp->width, vp->height);
+                    glScissor(vp->x, vp->y, vp->width, vp->height);
+
+                    // Clear viewport
+                    glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    glUseProgram(shader->programId());
+
+                    // Render all entities with the view camera
+                    query.renderables
+                        .each([cam](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
+                            auto e = it.entity(i);
+                            // render cubes
+                            glm::mat4 worldTransform = Math::computeWorldTransform(e);
+
+                            mat.shader->setMat4(10, worldTransform); // worldMatrix
+                            mat.shader->setMat4(11, cam.view);       // viewMatrix
+                            mat.shader->setMat4(12, cam.projection); // projectionMatrix
+                            mat.shader->setVec3(13, cam.pos);        // camPos
+
+                            glBindVertexArray(mesh.vaoId);
+                            glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
+                        });
+                    // Disable the scissor test
+                    glDisable(GL_SCISSOR_TEST);
+                });
             });
     }
     virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override {
-        // Viewport
-        world.system<std::shared_ptr<Viewport>, Camera3d, WorldQuery>("Render_Viewport")
-            .kind(phase) //
-            .each([this](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
-                // Enable the scissor test
-                glEnable(GL_SCISSOR_TEST);
-
-                auto shader = it.world().get<Shader>();
-                glViewport(vp->x, vp->y, vp->width, vp->height);
-                glScissor(vp->x, vp->y, vp->width, vp->height);
-
-                // Clear viewport
-                glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glUseProgram(shader->programId());
-
-                // Render all entities with the view camera
-                query.renderables
-                    .each([cam](flecs::iter &it, size_t i, const Transform3d &trans, const MeshVao &mesh, const Material &mat) {
-                        auto e = it.entity(i);
-                        // render cubes
-                        glm::mat4 worldTransform = Math::computeWorldTransform(e);
-
-                        mat.shader->setMat4(10, worldTransform); // worldMatrix
-                        mat.shader->setMat4(11, cam.view);       // viewMatrix
-                        mat.shader->setMat4(12, cam.projection); // projectionMatrix
-                        mat.shader->setVec3(13, cam.pos);        // camPos
-
-                        glBindVertexArray(mesh.vaoId);
-                        glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
-                    });
-                // Disable the scissor test
-                glDisable(GL_SCISSOR_TEST);
-            });
     }
 
     virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) override {
