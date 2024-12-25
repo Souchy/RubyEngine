@@ -134,37 +134,44 @@ public:
             .kind(phase) //
             .term_at(0)
             .singleton()
-            .each([views](const std::shared_ptr<Window> &w)
+            .each([views](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w)
                   {
+
+                auto ws = it.world().get<WindowSize>();
+
                 // Clear background
                 glClearColor(0, 0, 0, 1);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_BACK);
 
+                glViewport(0, 0, ws->width, ws->height);
                 if(w->fbo && w->fbo->active) {
                     glBindFramebuffer(GL_FRAMEBUFFER, w->fbo->id);
                 }
 
                 views.each([](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
                     flecs::entity e = it.entity(i);
-
+                    auto name = e.name();
                     bool hasFbo = e.has<std::shared_ptr<Fbo>>();
                     bool activeFbo = false;
+
                     if(hasFbo) {
                         auto fbo = *e.get<std::shared_ptr<Fbo>>();
                         activeFbo = fbo->active;
                         if(activeFbo) {
                             glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
+                            glViewport(0, 0, vp->width, vp->height);
                         }
-                    }
+                    } 
 
-                    // Enable the scissor test
-                    glEnable(GL_SCISSOR_TEST);
-
+                    if(!activeFbo) {
+                        // Enable the scissor test
+                        glEnable(GL_SCISSOR_TEST);
+                        glScissor(vp->x, vp->y, vp->width, vp->height);
+                        glViewport(vp->x, vp->y, vp->width, vp->height);
+                    } 
                     auto shader = it.world().get<Shader>();
-                    glViewport(vp->x, vp->y, vp->width, vp->height);
-                    glScissor(vp->x, vp->y, vp->width, vp->height);
 
                     // Clear viewport
                     glClearColor(vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
@@ -186,12 +193,14 @@ public:
                             glBindVertexArray(mesh.vaoId);
                             glDrawElements(mat.MODE, mesh.indexSize, GL_UNSIGNED_INT, nullptr);
                         });
-                    // Disable the scissor test
-                    glDisable(GL_SCISSOR_TEST);
 
+                    if(!activeFbo) {
+                        // Disable the scissor test
+                        glDisable(GL_SCISSOR_TEST);
+                    }
                     if(hasFbo && activeFbo) {
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                    } //
+                    } 
                 });
 
                 if(w->fbo && w->fbo->active) {

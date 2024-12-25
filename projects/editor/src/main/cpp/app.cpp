@@ -104,6 +104,8 @@ void App::init(Ruby *ruby)
 
             // Entity View = Camera + Viewport
             std::shared_ptr<Fbo> fbo = std::make_shared<Fbo>();
+            fbo->x = vp->x;
+            fbo->y = vp->y;
             fbo->width = vp->width;
             fbo->height = vp->height;
             GlUtil::genFbo(fbo);
@@ -131,6 +133,8 @@ void App::init(Ruby *ruby)
             vp2->resize(ws.width, ws.height);
                 
             std::shared_ptr<Fbo> fbo = std::make_shared<Fbo>();
+            fbo->x = vp2->x;
+            fbo->y = vp2->y;
             fbo->width = vp2->width;
             fbo->height = vp2->height;
             GlUtil::genFbo(fbo);
