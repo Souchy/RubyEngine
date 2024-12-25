@@ -48,30 +48,20 @@ public:
 
     void drawScene(flecs::entity root) override
     {
-        // TODO replace with selected Fbo (could be the whole window, one of the viewports/cam, the physics, the depthmap, etc)
-
-        viewQuery.each([this](flecs::entity view, std::shared_ptr<Fbo> &fbo)
-                       {
-                           // Draw viewport
-                           // ImGui::Text("Fbo: %s", view.name().c_str());
+        // Rreplace with selected Fbo (could be the whole window, one of the viewports/cam, the physics, the depthmap, etc)
+        viewQuery.each([this](flecs::entity view, std::shared_ptr<Fbo> &fbo) {
                            bool isSelected = (selectedFbo == fbo);
-                           if (ImGui::RadioButton(view.name().c_str(), isSelected))
-                           {
+                           if (ImGui::RadioButton(view.name().c_str(), isSelected)) {
+                               if(selectedFbo != nullptr) selectedFbo->active = false;
                                selectedFbo = fbo;
-                           }
-                           // ImGui::Text("Camera: %s", cam.name.c_str());
-                           // ImGui::Text("Query: %s", query.name.c_str());
-                           // ImGui::Text("Viewport: %d, %d, %d, %d", vp->x, vp->y, vp->width, vp->height);
-                           // ImGui::Text("Clear Color: %f, %f, %f, %f", vp->clearColor.r, vp->clearColor.g, vp->clearColor.b, vp->clearColor.a);
-                       });
+                               selectedFbo->active = true;
+                           } 
+                        });
 
-        if (selectedFbo == nullptr)
-        {
+        if (selectedFbo == nullptr) {
             auto w = *root.world().get<std::shared_ptr<Window>>();
             selectedFbo = w->fbo;
-        }
-        if (selectedFbo == nullptr)
-        {
+            selectedFbo->active = true;
             return;
         }
         ImGui::Image(selectedFbo->texture, ImVec2(selectedFbo->width, selectedFbo->height), ImVec2(0, 1), ImVec2(1, 0));

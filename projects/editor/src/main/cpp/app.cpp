@@ -52,6 +52,7 @@ void App::init(Ruby *ruby)
         window->fbo = fbo;
     }
     ruby->world.set<std::shared_ptr<Window>>(window);
+    ruby->world.entity("Window").set<std::shared_ptr<Window>>(window).set<std::shared_ptr<Fbo>>(window->fbo);
         //.set<std::shared_ptr<Fbo>>(window->fbo); // maybe? pour query tous les fbo et les resize/select 
     ruby->world.set<WindowSize>(ws);
 
@@ -102,7 +103,11 @@ void App::init(Ruby *ruby)
             vp->resize(ws.width, ws.height);
 
             // Entity View = Camera + Viewport
-            ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<WorldQuery>(query);
+            std::shared_ptr<Fbo> fbo = std::make_shared<Fbo>();
+            fbo->width = vp->width;
+            fbo->height = vp->height;
+            GlUtil::genFbo(fbo);
+            ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<WorldQuery>(query).set<std::shared_ptr<Fbo>>(fbo);
         }
         {
             // Camera
@@ -124,7 +129,12 @@ void App::init(Ruby *ruby)
             vp2->heightPercentOfHeight = 1.0f;
             vp2->clearColor = glm::vec4(0.0f, 0.2f, 0.5f, 1.0f);
             vp2->resize(ws.width, ws.height);
-            ruby->world.entity("view2").set<std::shared_ptr<Viewport>>(vp2).set<Camera3d>(cam).set<WorldQuery>(query);
+                
+            std::shared_ptr<Fbo> fbo = std::make_shared<Fbo>();
+            fbo->width = vp2->width;
+            fbo->height = vp2->height;
+            GlUtil::genFbo(fbo);
+            ruby->world.entity("view2").set<std::shared_ptr<Viewport>>(vp2).set<Camera3d>(cam).set<WorldQuery>(query).set<std::shared_ptr<Fbo>>(fbo);
         }
     }
 

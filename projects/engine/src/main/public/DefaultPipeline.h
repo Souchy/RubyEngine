@@ -9,7 +9,8 @@
 #include "util/MeshVao.h"
 #include <flecs.h>
 
-class Pipeline {
+class Pipeline
+{
 public:
     virtual void init(flecs::world &world) = 0;
     virtual void systemInputs(flecs::world &world, flecs::entity_t phase) = 0;
@@ -22,9 +23,11 @@ public:
     virtual void systemRenderWindow(flecs::world &world, flecs::entity_t phase) = 0;
 };
 
-class DefaultPipeline : public Pipeline {
+class DefaultPipeline : public Pipeline
+{
 public:
-    virtual void init(flecs::world &world) override {
+    virtual void init(flecs::world &world) override
+    {
         // ----- Pipeline
         ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
         ecs_entity_t ClearWindow = ecs_new_w_id(world, EcsPhase);
@@ -62,81 +65,100 @@ public:
         }
     }
 
-    virtual void systemInputs(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemInputs(flecs::world &world, flecs::entity_t phase) override
+    {
         world.system<std::shared_ptr<Window>>("Inputs")
             .term_at(0)
             .singleton()
             .kind(phase) //
-            .each([](flecs::iter &it, size_t i, std::shared_ptr<Window> &w) {
-                if (glfwGetKey(w->m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                    glfwSetWindowShouldClose(w->m_window, true);
-                // if (!m_imGuiActive)
-                // {
-                // 	m_camera.keybordEvents(m_window, delta_time);
-                // }
-            });
+            .each([](flecs::iter &it, size_t i, std::shared_ptr<Window> &w)
+                  {
+                      if (glfwGetKey(w->m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                          glfwSetWindowShouldClose(w->m_window, true);
+                      // if (!m_imGuiActive)
+                      // {
+                      // 	m_camera.keybordEvents(m_window, delta_time);
+                      // }
+                  });
     }
 
-    virtual void systemUpdateLogic(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemUpdateLogic(flecs::world &world, flecs::entity_t phase) override
+    {
         world.system<Transform3d, Velocity>("UpdateLogic")
             .kind(phase)
-            .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
+            .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel)
+                  {
                 auto mat = glm::translate(trans.value, vel.value * it.delta_time());
-                trans.value = mat;
-            });
+                trans.value = mat; });
     }
 
-    virtual void systemUpdatePhysic(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemUpdatePhysic(flecs::world &world, flecs::entity_t phase) override
+    {
         world.system<Transform3d, Velocity>("UpdatePhysics")
             .kind(phase)
-            .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
-            });
+            .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {});
     }
 
-    virtual void systemRenderDepth(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemRenderDepth(flecs::world &world, flecs::entity_t phase) override
+    {
         world.system<std::shared_ptr<Window>, Shader>("RenderPass_Depth")
             .kind(phase)
             .term_at(0)
             .singleton()
-            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w, const Shader &shader) {
-                // glViewport(0, 0, 1024, 1024);
-                // glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-                // glEnable(GL_CULL_FACE);
-                // glCullFace(GL_FRONT);
-                // glClear(GL_DEPTH_BUFFER_BIT);
+            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w, const Shader &shader)
+                  {
+                      // glViewport(0, 0, 1024, 1024);
+                      // glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+                      // glEnable(GL_CULL_FACE);
+                      // glCullFace(GL_FRONT);
+                      // glClear(GL_DEPTH_BUFFER_BIT);
 
-                // glUseProgram(shader.programId());
+                      // glUseProgram(shader.programId());
 
-                // // renderNode(root);
-                // renderMeshSystem.run();
+                      // // renderNode(root);
+                      // renderMeshSystem.run();
 
-                // glFinish();
-                // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            });
+                      // glFinish();
+                      // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                  });
     }
 
-    virtual void systemClearWindow(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemClearWindow(flecs::world &world, flecs::entity_t phase) override
+    {
         auto views = world.query_builder<std::shared_ptr<Viewport>, Camera3d, WorldQuery>()
-                                 .cached()
-                                 .query_flags(EcsQueryMatchEmptyTables)
-                                 .build();
+                         .cached()
+                         .query_flags(EcsQueryMatchEmptyTables)
+                         .build();
         // Window
         world.system<std::shared_ptr<Window>>("Clear Window")
             .kind(phase) //
             .term_at(0)
             .singleton()
-            .each([views](const std::shared_ptr<Window> &w) {
+            .each([views](const std::shared_ptr<Window> &w)
+                  {
                 // Clear background
                 glClearColor(0, 0, 0, 1);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_BACK);
 
-                if(w->fbo) {
+                if(w->fbo && w->fbo->active) {
                     glBindFramebuffer(GL_FRAMEBUFFER, w->fbo->id);
                 }
 
                 views.each([](flecs::iter &it, size_t i, const std::shared_ptr<Viewport> &vp, const Camera3d &cam, const WorldQuery &query) {
+                    flecs::entity e = it.entity(i);
+
+                    bool hasFbo = e.has<std::shared_ptr<Fbo>>();
+                    bool activeFbo = false;
+                    if(hasFbo) {
+                        auto fbo = *e.get<std::shared_ptr<Fbo>>();
+                        activeFbo = fbo->active;
+                        if(activeFbo) {
+                            glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
+                        }
+                    }
+
                     // Enable the scissor test
                     glEnable(GL_SCISSOR_TEST);
 
@@ -166,22 +188,29 @@ public:
                         });
                     // Disable the scissor test
                     glDisable(GL_SCISSOR_TEST);
+
+                    if(hasFbo && activeFbo) {
+                        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                    } //
                 });
 
-                if(w->fbo) {
+                if(w->fbo && w->fbo->active) {
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                }	
-            });
+                } //
+        });
     }
-    virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemRenderViewport(flecs::world &world, flecs::entity_t phase) override
+    {
     }
 
-    virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemRenderUi(flecs::world &world, flecs::entity_t phase) override
+    {
         world.system<std::shared_ptr<Window>, std::shared_ptr<Ui>>("RenderUi_Imgui")
             .kind(phase) //
             .term_at(0)
             .singleton()
-            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w, std::shared_ptr<Ui> ui) {
+            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w, std::shared_ptr<Ui> ui)
+                  {
                 // Select root node by default
                 // if (getSelectedNode() == nullptr)
                 //     setSelectedNode(root);
@@ -197,24 +226,24 @@ public:
                 // this->renderNodeProperties(root);
 
                 ImGui::Render();
-                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-            });
+                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); });
         // world.system<UiTag, Transform3d, Material>("RenderUi_Controls")
         //     .kind(RenderingUi) //
         //     .each([](flecs::iter &it, size_t i, UiTag &ui, const Transform3d &trans, const Material &mat) {
         //     });
     }
 
-    virtual void systemRenderWindow(flecs::world &world, flecs::entity_t phase) override {
+    virtual void systemRenderWindow(flecs::world &world, flecs::entity_t phase) override
+    {
         world.system<std::shared_ptr<Window>>("Window")
             .term_at(0)
             .singleton()
             .kind(phase)
-            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w) {
+            .each([](flecs::iter &it, size_t i, const std::shared_ptr<Window> &w)
+                  {
                 // Show rendering and get events
                 glfwSwapBuffers(w->m_window);
                 // m_imGuiActive = ImGui::IsAnyItemActive();
-                glfwPollEvents();
-            });
+                glfwPollEvents(); });
     }
 };

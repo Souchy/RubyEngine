@@ -12,6 +12,7 @@ struct Fbo {
     GLint y;
     GLsizei width;
     GLsizei height;
+    bool active;
     // GLuint depth;
     // GLuint stencil;
 
