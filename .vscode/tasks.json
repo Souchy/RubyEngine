@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build_bazel",
+            "type": "shell",
+            "command": "bazel",
+            "args": [
+                "build",
+                "//projects/...",
+                "--enable_workspace",
+                // "--compilation_mode=dbg"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+        }
+    ]
+}

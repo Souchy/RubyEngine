@@ -7,6 +7,8 @@ bazel-*
 
 ###### VSCode
 .vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 
 ###### Gradle
 .gradle
