@@ -68,8 +68,8 @@ public:
             .singleton()
             .kind(phase) //
             .each([](flecs::iter &it, size_t i, std::shared_ptr<Window> &w) {
-                if (glfwGetKey(w->m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                    glfwSetWindowShouldClose(w->m_window, true);
+                // if (glfwGetKey(w->m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                //     glfwSetWindowShouldClose(w->m_window, true);
                 // if (!m_imGuiActive)
                 // {
                 // 	m_camera.keybordEvents(m_window, delta_time);
@@ -78,11 +78,20 @@ public:
     }
 
     virtual void systemUpdateLogic(flecs::world &world, flecs::entity_t phase) override {
-        world.system<Transform3d, Velocity>("UpdateLogic")
+        world.system<Transform3d, Position, Rotation, Scale>("UpdateLogic")
             .kind(phase)
-            .each([](flecs::iter &it, size_t i, Transform3d &trans, const Velocity &vel) {
-                auto mat = glm::translate(trans.value, vel.value * it.delta_time());
-                trans.value = mat;
+            .each([](flecs::iter &it, size_t i, Transform3d &trans, const Position &pos, const Rotation &rot, const Scale &scale) {
+                // auto mat = glm::translate(trans.value, vel.value * it.delta_time());
+                // trans.value = mat;
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, pos.value);
+                model = glm::rotate(model, glm::radians(rot.value.x), glm::vec3(1.0f, 0.0f, 0.0f));
+                model = glm::rotate(model, glm::radians(rot.value.y), glm::vec3(0.0f, 1.0f, 0.0f));
+                model = glm::rotate(model, glm::radians(rot.value.z), glm::vec3(0.0f, 0.0f, 1.0f));
+                model = glm::scale(model, scale.value);
+                trans.value = model;
+
+                // it.entity(i).set<Transform3d>(trans);
             });
     }
 

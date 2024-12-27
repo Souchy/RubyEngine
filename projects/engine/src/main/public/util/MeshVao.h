@@ -5,23 +5,26 @@
 #endif
 #include <resources/Mesh.h>
 
-// VAOs and VBOs
-enum VAO_IDs {
-    Torus,
-    NumVAOs,
-};
-enum Buffer_IDs {
-    Position,
-    Normal,
-    UV,
-    Color,
-    // Tangent,
-    Indices,
-    NumBuffers
-};
-
-class MeshVao {
+class MeshVao
+{
 public:
+    // VAOs and VBOs
+    enum VAO_IDs
+    {
+        Torus,
+        NumVAOs,
+    } VaoType;
+    enum Buffer_IDs
+    {
+        Position,
+        Normal,
+        UV,
+        Color,
+        // Tangent,
+        Indices,
+        NumBuffers
+    } VboType;
+
     GLuint vaoId;
     GLuint m_Buffers[NumBuffers];
     GLsizei indexSize;

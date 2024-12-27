@@ -3,12 +3,17 @@
 #include <glm/glm.hpp>
 
 struct Position {
-	glm::vec3 value;
+	glm::vec3 value = glm::vec3(0.0f);
+};
+struct Scale {
+	glm::vec3 value = glm::vec3(1.0f);
+};
+struct Rotation {
+	glm::vec3 value = glm::vec3(0.0f);
 };
 struct Velocity {
 	glm::vec3 value;
 };
-
 
 struct Transform3d {
 	glm::mat4 value;
