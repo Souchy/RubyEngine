@@ -5,6 +5,13 @@
 
 struct UiTag {};
 
+struct Boundingbox2d {
+    GLint x;
+    GLint y;
+    GLsizei width;
+    GLsizei height;
+};
+
 struct Fbo {
     GLuint id;
     GLuint texture;

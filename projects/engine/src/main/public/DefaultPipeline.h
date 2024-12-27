@@ -8,6 +8,9 @@
 #include "util/Math.h"
 #include "util/MeshVao.h"
 #include <flecs.h>
+#include <memory>
+#include "components/Components.h"
+#include "components/3d/Components3d.h"
 
 class Pipeline
 {
@@ -161,7 +164,7 @@ public:
                         activeFbo = fbo->active;
                         if(activeFbo) {
                             glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
-                            glViewport(0, 0, vp->width, vp->height);
+                            glViewport(0, 0, fbo->width, fbo->height);
                         }
                     } 
 
