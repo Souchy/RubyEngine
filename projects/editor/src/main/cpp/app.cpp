@@ -169,71 +169,76 @@ void App::init(Ruby *ruby)
 
         ruby->world.entity("root").scope([&]
                                          {
-                                             Transform3d tr1;
-                                             tr1.value = glm::mat4(1.0f);
                                              flecs::entity parent = ruby->world.entity("parent");
+                                             Transform3d tr1;
+                                            //  tr1.value = glm::mat4(1.0f);
                                              parent.set<Transform3d>(tr1);
                                              parent.set<Mesh>(*cube);
                                              parent.set<MeshVao>(cubeBuffer);
                                              parent.set<Material>(mat);
-                                             parent.add<Rotation>().add<Scale>();
-                                             Position pos1;
-                                             pos1.value = glm::vec3(0);
-                                             parent.set<Position>(pos1);
+                                            //  parent.add<Rotation>().add<Scale>();
+                                            //  Position pos1;
+                                            //  pos1.value = glm::vec3(0);
+                                            //  parent.set<Position>(pos1);
+                                            
 
                                              // parent.scope([&]
                                              {
-                                                 Transform3d tr2;
-                                                 tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
                                                  flecs::entity child = ruby->world.entity("child").child_of(parent);
+                                                 Transform3d tr2;
+                                                //  tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0, 0));
+                                                 tr2.setPosition(glm::vec3(3.0f, 0, 0));
                                                  child.set<Transform3d>(tr2);
                                                  child.set<Mesh>(*cube);
                                                  child.set<MeshVao>(cubeBuffer);
                                                  child.set<Material>(mat);
-                                                 child.add<Rotation>().add<Scale>();
-                                                Position pos2;
-                                                pos2.value = glm::vec3(3.0f, 0, 0);
-                                                child.set<Position>(pos2);
+                                                //  child.add<Rotation>().add<Scale>();
+                                                // Position pos2;
+                                                // pos2.value = glm::vec3(3.0f, 0, 0);
+                                                // child.set<Position>(pos2);
 
-                                                 Transform3d tr3;
-                                                 tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
-                                                 // tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
                                                  flecs::entity grandchild = ruby->world.entity("grandchild").child_of(child);
+                                                 Transform3d tr3;
+                                                //  tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+                                                 // tr3.value = glm::scale(tr3.value, glm::vec3(4.0f, 1.0, 2.0f));
+                                                 tr3.setPosition(glm::vec3(0.0f, 3.0f, 0.0f));
                                                  grandchild.set<Transform3d>(tr3);
                                                  grandchild.set<Mesh>(*cube);
                                                  grandchild.set<MeshVao>(cubeBuffer);
                                                  grandchild.set<Material>(mat);
-                                                 grandchild.add<Rotation>().add<Scale>();
-                                                Position pos3;
-                                                pos3.value = glm::vec3(0, 3.0f, 0);
-                                                grandchild.set<Position>(pos3);
+                                                //  grandchild.add<Rotation>().add<Scale>();
+                                                // Position pos3;
+                                                // pos3.value = glm::vec3(0, 3.0f, 0);
+                                                // grandchild.set<Position>(pos3);
                                              }
                                              // );
                                              // parent.scope([&]
                                              {
-                                                 Transform3d tr2;
-                                                 tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
                                                  flecs::entity child2 = ruby->world.entity("child2").child_of(parent);
+                                                 Transform3d tr2;
+                                                //  tr2.value = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0, 0));
+                                                tr2.setPosition(glm::vec3(-3.0f, 0, 0));
                                                  child2.set<Transform3d>(tr2);
                                                  child2.set<Mesh>(*cube);
                                                  child2.set<MeshVao>(cubeBuffer);
                                                  child2.set<Material>(mat);
-                                                 child2.add<Rotation>().add<Scale>();
-                                                Position pos2;
-                                                pos2.value = glm::vec3(-3.0f, 0, 0);
-                                                child2.set<Position>(pos2);
+                                                //  child2.add<Rotation>().add<Scale>();
+                                                // Position pos2;
+                                                // pos2.value = glm::vec3(-3.0f, 0, 0);
+                                                // child2.set<Position>(pos2);
 
-                                                 Transform3d tr3;
-                                                 tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
                                                  flecs::entity grandchild2 = ruby->world.entity("grandchild2").child_of(child2);
+                                                 Transform3d tr3;
+                                                //  tr3.value = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+                                                tr3.setPosition(glm::vec3(0.0f, 3.0f, 0.0f));
                                                  grandchild2.set<Transform3d>(tr3);
                                                  grandchild2.set<Mesh>(*gizmo);
                                                  grandchild2.set<MeshVao>(gizmoBuffer);
                                                  grandchild2.set<Material>(mat_lines);
-                                                 grandchild2.add<Rotation>().add<Scale>();
-                                                Position pos3;
-                                                pos3.value = glm::vec3(0, 3.0f, 0);
-                                                grandchild2.set<Position>(pos3);
+                                                //  grandchild2.add<Rotation>().add<Scale>();
+                                                // Position pos3;
+                                                // pos3.value = glm::vec3(0, 3.0f, 0);
+                                                // grandchild2.set<Position>(pos3);
                                              }
                                              // );
                                          } //

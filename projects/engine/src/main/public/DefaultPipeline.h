@@ -8,6 +8,7 @@
 #include "util/Math.h"
 #include "util/MeshVao.h"
 #include <flecs.h>
+#include <memory>
 
 class Pipeline {
 public:
@@ -83,13 +84,6 @@ public:
             .each([](flecs::iter &it, size_t i, Transform3d &trans, const Position &pos, const Rotation &rot, const Scale &scale) {
                 // auto mat = glm::translate(trans.value, vel.value * it.delta_time());
                 // trans.value = mat;
-                glm::mat4 model = glm::mat4(1.0f);
-                model = glm::translate(model, pos.value);
-                model = glm::rotate(model, glm::radians(rot.value.x), glm::vec3(1.0f, 0.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(rot.value.y), glm::vec3(0.0f, 1.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(rot.value.z), glm::vec3(0.0f, 0.0f, 1.0f));
-                model = glm::scale(model, scale.value);
-                trans.value = model;
 
                 // it.entity(i).set<Transform3d>(trans);
             });

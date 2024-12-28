@@ -48,45 +48,26 @@ public:
                 auto component = id.entity();
                 ImGui::TextColored(ImVec4(1, 0, 1, 1), "Entity: %s", component.name().c_str());
                 if (component == flecs::type_id<Transform3d>()) {
-                    auto transform = entity.get<Transform3d>();
-                    ImGui::Text("Position: %f, %f, %f", transform->value[3][0], transform->value[3][1], transform->value[3][2]);
+                    auto transform = entity.get_mut<Transform3d>();
+                    // ImGui::Text("Position: %f, %f, %f", transform->value[3][0], transform->value[3][1], transform->value[3][2]);
+                    
+                    auto p = transform->getPositionArray();
+                    if(ImGui::DragFloat3("Position", p.data(), 0.1f, -1000.0f, 1000.0f)) {
+                        transform->setPositionArray(p);
+                    }
+                    auto r = transform->getRotationArray();
+                    if(ImGui::DragFloat3("Rotation", r.data(), 0.1f, 0.0f, 360.0f)) {
+                        transform->setRotationArray(r);
+                    }
+                    auto s = transform->getScaleArray();
+                    if(ImGui::DragFloat3("Scale", s.data(), 0.1f, -100.0f, 100.0f)) {
+                        transform->setScaleArray(s);
+                    }
                 }
                 if(component == flecs::type_id<Material>()) {
                     auto material = entity.get<Material>();
                     // ImGui::Text("ProgramId %s", material->shader->programId());
                     // ImGui::Text("Material: %s", material->MODE);
-                }
-                if(component == flecs::type_id<Position>()) {
-                    auto position = entity.get<Position>();
-                    // ImGui::Text("Position: %f, %f, %f", position->value.x, position->value.y, position->value.z);
-                    float p[3] = {position->value.x, position->value.y, position->value.z};
-                    if(ImGui::DragFloat3("Position", p, 0.01f)) {
-                        Position s;
-                        s.value = glm::vec3(p[0], p[1], p[2]);
-                        entity.set<Position>(s);
-                    }
-                }
-                if(component == flecs::type_id<Scale>()) {
-                    auto scale = entity.get<Scale>();
-                    // ImGui::Text("Scale: %f, %f, %f", scale->value.x, scale->value.y, scale->value.z);
-                    // float* p = &scale->value.x;
-                    float p[3] = {scale->value.x, scale->value.y, scale->value.z};
-                    if(ImGui::DragFloat3("Scale", p, 0.01f)) {
-                        Scale s;
-                        s.value = glm::vec3(p[0], p[1], p[2]);
-                        entity.set<Scale>(s);
-                    }
-                }
-                if(component == flecs::type_id<Rotation>()) {
-                    auto rotation = entity.get<Rotation>();
-                    // ImGui::Text("Rotation: %f, %f, %f", rotation->value.x, rotation->value.y, rotation->value.z);
-                    // ImGui::DragFloat3("Rotation", &rotation->value.x, 0.01f, -360.0f, 360.0f);
-                    float p[3] = {rotation->value.x, rotation->value.y, rotation->value.z};
-                    if(ImGui::DragFloat3("Rotation", p, 0.01f, -360.0f, 360.0f)) {
-                        Rotation s;
-                        s.value = glm::vec3(p[0], p[1], p[2]);
-                        entity.set<Rotation>(s);
-                    }
                 }
             }
             if (id.is_pair()) {
