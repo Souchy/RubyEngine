@@ -43,7 +43,7 @@ void App::init(Ruby *ruby)
         WindowSize w = {width, height};
         ruby->world.set<WindowSize>(w);
     };
-    // Fbo
+    // Fbo window
     {
         std::shared_ptr<Fbo> fbo = std::make_shared<Fbo>();
         fbo->width = ws.width;
@@ -94,11 +94,19 @@ void App::init(Ruby *ruby)
             cam.view = glm::lookAt(camPos, camTarget, camUp);
 
             // Viewport
-            std::shared_ptr<PercentViewport> vp = std::make_shared<PercentViewport>();
-            vp->xPercentOfWidth = 0.5f;
-            vp->yPercentOfHeight = 0.0f;
-            vp->widthPercentOfWidth = 0.5f;
-            vp->heightPercentOfHeight = 1.0f;
+            // std::shared_ptr<PercentViewport> vp = std::make_shared<PercentViewport>();
+            // vp->xPercentOfWidth = 0.5f;
+            // vp->yPercentOfHeight = 0.0f;
+            // vp->widthPercentOfWidth = 0.5f;
+            // vp->heightPercentOfHeight = 1.0f;
+            // vp->clearColor = glm::vec4(0.5f, 0.0f, 0.2f, 1.0f);
+            // vp->resize(ws.width, ws.height);
+            
+            std::shared_ptr<SomeViewport> vp = std::make_shared<SomeViewport>();
+            vp->x = ws.width / 2;
+            vp->aspectFixed = true;
+            vp->aspect = 16.f / 9.f;
+            vp->mode = FitMode::Fit;
             vp->clearColor = glm::vec4(0.5f, 0.0f, 0.2f, 1.0f);
             vp->resize(ws.width, ws.height);
 
@@ -108,6 +116,7 @@ void App::init(Ruby *ruby)
             fbo->y = vp->y;
             fbo->width = vp->width;
             fbo->height = vp->height;
+            fbo->viewport = vp;
             GlUtil::genFbo(fbo);
             ruby->world.entity("view1").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<WorldQuery>(query).set<std::shared_ptr<Fbo>>(fbo);
         }
@@ -124,21 +133,34 @@ void App::init(Ruby *ruby)
             cam.view = glm::lookAt(camPos, camTarget, camUp);
 
             // Viewport 2
-            std::shared_ptr<PercentViewport> vp2 = std::make_shared<PercentViewport>();
-            vp2->xPercentOfWidth = 0.0f;
-            vp2->yPercentOfHeight = 0.0f;
-            vp2->widthPercentOfWidth = 0.5f;
-            vp2->heightPercentOfHeight = 1.0f;
-            vp2->clearColor = glm::vec4(0.0f, 0.2f, 0.5f, 1.0f);
-            vp2->resize(ws.width, ws.height);
+            // std::shared_ptr<PercentViewport> vp2 = std::make_shared<PercentViewport>();
+            // vp2->xPercentOfWidth = 0.0f;
+            // vp2->yPercentOfHeight = 0.0f;
+            // vp2->widthPercentOfWidth = 0.5f;
+            // vp2->heightPercentOfHeight = 1.0f;
+            // vp2->clearColor = glm::vec4(0.0f, 0.2f, 0.5f, 1.0f);
+            // vp2->resize(ws.width, ws.height);
+            // std::shared_ptr<FitViewport> vp2 = std::make_shared<FitViewport>();
+            // vp2->aspectFixed = true;
+            // vp2->aspect = 16.f / 9.f;
+            // vp2->clearColor = glm::vec4(0.0f, 0.2f, 0.5f, 1.0f);
+            // vp2->way = FitWay::Width;
+            // vp2->resize(ws.width, ws.height);
+            std::shared_ptr<SomeViewport> vp = std::make_shared<SomeViewport>();
+            vp->aspectFixed = true;
+            vp->aspect = 16.f / 9.f;
+            vp->mode = FitMode::Fill;
+            vp->clearColor = glm::vec4(0.0f, 0.2f, 0.5f, 1.0f);
+            vp->resize(ws.width, ws.height);
                 
             std::shared_ptr<Fbo> fbo = std::make_shared<Fbo>();
-            fbo->x = vp2->x;
-            fbo->y = vp2->y;
-            fbo->width = vp2->width;
-            fbo->height = vp2->height;
+            fbo->x = vp->x;
+            fbo->y = vp->y;
+            fbo->width = vp->width;
+            fbo->height = vp->height;
+            fbo->viewport = vp;
             GlUtil::genFbo(fbo);
-            ruby->world.entity("view2").set<std::shared_ptr<Viewport>>(vp2).set<Camera3d>(cam).set<WorldQuery>(query).set<std::shared_ptr<Fbo>>(fbo);
+            ruby->world.entity("view2").set<std::shared_ptr<Viewport>>(vp).set<Camera3d>(cam).set<WorldQuery>(query).set<std::shared_ptr<Fbo>>(fbo);
         }
     }
 

@@ -48,15 +48,17 @@ public:
 
     void drawScene(flecs::entity root) override
     {
+        // window size -> fbo size (scissor) -> viewport size
+
         // Rreplace with selected Fbo (could be the whole window, one of the viewports/cam, the physics, the depthmap, etc)
         viewQuery.each([this](flecs::entity view, std::shared_ptr<Fbo> &fbo) {
-                           bool isSelected = (selectedFbo == fbo);
-                           if (ImGui::RadioButton(view.name().c_str(), isSelected)) {
-                               if(selectedFbo != nullptr) selectedFbo->active = false;
-                               selectedFbo = fbo;
-                               selectedFbo->active = true;
-                           } 
-                        });
+            bool isSelected = (selectedFbo == fbo);
+            if (ImGui::RadioButton(view.name().c_str(), isSelected)) {
+                if (selectedFbo != nullptr) selectedFbo->active = false;
+                selectedFbo = fbo;
+                selectedFbo->active = true;
+            }
+        });
 
         if (selectedFbo == nullptr) {
             auto w = *root.world().get<std::shared_ptr<Window>>();
@@ -65,6 +67,28 @@ public:
             return;
         }
         ImGui::Image(selectedFbo->texture, ImVec2(selectedFbo->width, selectedFbo->height), ImVec2(0, 1), ImVec2(1, 0));
+
+        // Yellow is content region min/max
+        {
+            ImVec2 vMin = ImGui::GetWindowContentRegionMin();
+            ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+
+            vMin.x += ImGui::GetWindowPos().x;
+            vMin.y += ImGui::GetWindowPos().y;
+            vMax.x += ImGui::GetWindowPos().x;
+            vMax.y += ImGui::GetWindowPos().y;
+
+            // Update fbo size
+            selectedFbo->x = vMin.x;
+            selectedFbo->y = vMin.y;
+            selectedFbo->width = vMax.x - vMin.x;
+            selectedFbo->height = vMax.y - vMin.y;
+            if (selectedFbo->viewport) {
+                selectedFbo->viewport->resize(selectedFbo->width, selectedFbo->height);
+            }
+
+            ImGui::GetForegroundDrawList()->AddRect(vMin, vMax, IM_COL32(255, 255, 0, 255));
+        }
     }
 
     void drawProperties(flecs::entity entity) override

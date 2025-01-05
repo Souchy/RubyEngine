@@ -162,18 +162,18 @@ public:
                     if(hasFbo) {
                         auto fbo = *e.get<std::shared_ptr<Fbo>>();
                         activeFbo = fbo->active;
+                            // Enable the scissor test
+                            glEnable(GL_SCISSOR_TEST);
+                            glScissor(fbo->x, fbo->y, fbo->width, fbo->height);
                         if(activeFbo) {
                             glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
-                            glViewport(0, 0, fbo->width, fbo->height);
+                            glViewport(0, 0, vp->width, vp->height);
                         }
+                        if(!activeFbo) {
+                            glViewport(vp->x, vp->y, vp->width, vp->height);
+                        } 
                     } 
 
-                    if(!activeFbo) {
-                        // Enable the scissor test
-                        glEnable(GL_SCISSOR_TEST);
-                        glScissor(vp->x, vp->y, vp->width, vp->height);
-                        glViewport(vp->x, vp->y, vp->width, vp->height);
-                    } 
                     auto shader = it.world().get<Shader>();
 
                     // Clear viewport
