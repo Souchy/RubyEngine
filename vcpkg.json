@@ -9,12 +9,12 @@
     {
       "name": "imgui",
       "features": [
+        "docking-experimental",
+        "freetype-lunasvg",
         "glfw-binding",
         "opengl3-binding",
         "vulkan-binding",
-        "win32-binding",
-        "freetype-lunasvg",
-        "docking-experimental"
+        "win32-binding"
       ]
     },
     "imgui-node-editor",
@@ -24,6 +24,7 @@
     "simdjson",
     "stb",
     "tbb",
-    "tinygltf"
+    "tinygltf",
+    "rttr"
   ]
 }
